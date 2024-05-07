@@ -11,6 +11,8 @@ import {
 import { PharmacyService } from './pharmacy.service';
 import { CreatePharmacyDto } from './dto/create-pharmacy.dto';
 import { UpdatePharmacyDto } from './dto/update-pharmacy.dto';
+import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
+import { AllowedPeriods } from 'src/common/enums/user-type.enum';
 
 @ApiTags('Pharmacy')
 @Controller('pharmacy')
@@ -27,11 +29,6 @@ export class PharmacyController {
     return this.pharmacyService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pharmacyService.findOne(+id);
-  }
-
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -43,5 +40,17 @@ export class PharmacyController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.pharmacyService.remove(+id);
+  }
+
+  @Get('/total-count/:period')
+  async getTotalStoreCount(
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.pharmacyService.getTotalPharmaciesCount(period);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.pharmacyService.findOne(+id);
   }
 }
