@@ -13,8 +13,12 @@ import {
   endOfMonth,
   startOfYear,
   endOfYear,
+  subYears,
+  subMonths,
+  subWeeks,
+  addDays,
 } from 'date-fns';
-import e from 'express';
+import { AllowedPeriods } from 'src/common/enums/user-type.enum';
 
 @Injectable()
 export class StoreService {
@@ -58,43 +62,77 @@ export class StoreService {
 
   remove(id: number) {
     return `This action removes a #${id} store`;
-
   }
-  async getTotalStoreCount(period: string): Promise<number> {
-    let periodStart: Date, periodEnd: Date;
+  async getTotalStoreCount(
+    period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    let periodStart: Date,
+      periodEnd: Date,
+      previousPeriodStart: Date,
+      previousPeriodEnd: Date;
 
     switch (period) {
-      case 'd':
+      case AllowedPeriods.DAY:
         periodStart = startOfDay(new Date());
         periodEnd = endOfDay(new Date());
+        previousPeriodStart = startOfDay(addDays(new Date(), -1)); // Previous day
+        previousPeriodEnd = endOfDay(addDays(new Date(), -1));
         break;
-      case 'w':
-        periodStart = startOfWeek(new Date(), { weekStartsOn: 6 }); // 6 > SutarDay
+      case AllowedPeriods.WEEK:
+        periodStart = startOfWeek(new Date(), { weekStartsOn: 6 });
         periodEnd = endOfWeek(new Date(), { weekStartsOn: 6 });
+        previousPeriodStart = startOfWeek(subWeeks(new Date(), 1), {
+          weekStartsOn: 6,
+        }); // Previous week
+        previousPeriodEnd = endOfWeek(subWeeks(new Date(), 1), {
+          weekStartsOn: 6,
+        });
         break;
-      case 'm':
+      case AllowedPeriods.MONTH:
         periodStart = startOfMonth(new Date());
         periodEnd = endOfMonth(new Date());
+        previousPeriodStart = startOfMonth(subMonths(new Date(), 1)); // Previous month
+        previousPeriodEnd = endOfMonth(subMonths(new Date(), 1));
         break;
-      case 'y':
+      case AllowedPeriods.YEAR:
         periodStart = startOfYear(new Date());
         periodEnd = endOfYear(new Date());
+        previousPeriodStart = startOfYear(subYears(new Date(), 1)); // Previous year
+        previousPeriodEnd = endOfYear(subYears(new Date(), 1));
         break;
-      default:
-        return await this.storeRepo.count();
+      case AllowedPeriods.ALLTIME:
+        return { count: await this.storeRepo.count(), percentageChange: 0 };
     }
 
     try {
-      const storeCount = await this.storeRepo.count({
-        where: {
-          createdAt: Between(periodStart, periodEnd),
-        },
-      });
-      return storeCount;
+      const [storeCount, previousStoreCount] = await Promise.all([
+        this.storeRepo.count({
+          where: { createdAt: Between(periodStart, periodEnd) },
+        }),
+        this.storeRepo.count({
+          where: { createdAt: Between(previousPeriodStart, previousPeriodEnd) },
+        }),
+      ]);
+
+      let percentageChange: number;
+
+      if (
+        (storeCount == 0 && previousStoreCount === 0) ||
+        previousStoreCount == storeCount
+      ) {
+        percentageChange = 0;
+      } else if (storeCount > previousStoreCount && previousStoreCount == 0) {
+        percentageChange = storeCount * +100;
+      } else if (previousStoreCount > storeCount && storeCount == 0) {
+        percentageChange = previousStoreCount * -100;
+      } else {
+        percentageChange =
+          ((storeCount - previousStoreCount) / previousStoreCount) * 100;
+      }
+
+      return { count: storeCount, percentageChange };
     } catch (error) {
       console.error('An error occurred while counting the stores:', error);
-      throw new Error('An error occurred while counting the stores.');
     }
   }
-} 
-
+}
