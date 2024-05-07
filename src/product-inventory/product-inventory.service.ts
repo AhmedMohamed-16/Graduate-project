@@ -80,12 +80,12 @@ export class ProductInventoryService {
   }
 
   /**
-   * Calculates the total store count based on the specified period.
-   * If the period is "all-time," returns the overall store count.
-   * Otherwise, computes the store count within the specified date range.
-   * Calculates the percentage change between the current and previous store counts.
+   * Calculates the total ProductInventories count based on the specified period.
+   * If the period is "all-time," returns the overall ProductInventory count.
+   * Otherwise, computes the ProductInventories count within the specified date range.
+   * Calculates the percentage change between the current and previous ProductInventories counts.
    */
-  async getTotalStoreCount(
+  async getTotalProductInventoriesCount(
     period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
     if (period === AllowedPeriods.ALLTIME) {
@@ -101,34 +101,47 @@ export class ProductInventoryService {
     } = this.calculateDateRanges(period);
 
     try {
-      const [storeCount, previousStoreCount] = await Promise.all([
-        this.productInventoryRepo.count({
-          where: { createdAt: Between(currentStartDate, currentEndDate) },
-        }),
-        this.productInventoryRepo.count({
-          where: { createdAt: Between(previousStartDate, previousEndDate) },
-        }),
-      ]);
+      const [ProductInventoriesCount, previousProductInventoriesCount] =
+        await Promise.all([
+          this.productInventoryRepo.count({
+            where: { createdAt: Between(currentStartDate, currentEndDate) },
+          }),
+          this.productInventoryRepo.count({
+            where: { createdAt: Between(previousStartDate, previousEndDate) },
+          }),
+        ]);
 
       let percentageChange: number;
 
       if (
-        (storeCount == 0 && previousStoreCount === 0) ||
-        previousStoreCount == storeCount
+        (ProductInventoriesCount == 0 &&
+          previousProductInventoriesCount === 0) ||
+        previousProductInventoriesCount == ProductInventoriesCount
       ) {
         percentageChange = 0;
-      } else if (storeCount > previousStoreCount && previousStoreCount == 0) {
-        percentageChange = storeCount * +100;
-      } else if (previousStoreCount > storeCount && storeCount == 0) {
-        percentageChange = previousStoreCount * -100;
+      } else if (
+        ProductInventoriesCount > previousProductInventoriesCount &&
+        previousProductInventoriesCount == 0
+      ) {
+        percentageChange = ProductInventoriesCount * +100;
+      } else if (
+        previousProductInventoriesCount > ProductInventoriesCount &&
+        ProductInventoriesCount == 0
+      ) {
+        percentageChange = previousProductInventoriesCount * -100;
       } else {
         percentageChange =
-          ((storeCount - previousStoreCount) / previousStoreCount) * 100;
+          ((ProductInventoriesCount - previousProductInventoriesCount) /
+            previousProductInventoriesCount) *
+          100;
       }
 
-      return { count: storeCount, percentageChange };
+      return { count: ProductInventoriesCount, percentageChange };
     } catch (error) {
-      console.error('An error occurred while counting the stores:', error);
+      console.error(
+        'An error occurred while counting the ProductInventory:',
+        error,
+      );
     }
   }
 

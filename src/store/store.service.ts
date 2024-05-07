@@ -65,12 +65,12 @@ export class StoreService {
   }
 
   /**
-   * Calculates the total store count based on the specified period.
-   * If the period is "all-time," returns the overall store count.
-   * Otherwise, computes the store count within the specified date range.
-   * Calculates the percentage change between the current and previous store counts.
+   * Calculates the total stores count based on the specified period.
+   * If the period is "all-time," returns the overall stores count.
+   * Otherwise, computes the stores count within the specified date range.
+   * Calculates the percentage change between the current and previous stores counts.
    */
-  async getTotalStoreCount(
+  async getTotalStoresCount(
     period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
     if (period === AllowedPeriods.ALLTIME) {
@@ -86,7 +86,7 @@ export class StoreService {
     } = this.calculateDateRanges(period);
 
     try {
-      const [storeCount, previousStoreCount] = await Promise.all([
+      const [storesCount, previousStoresCount] = await Promise.all([
         this.storeRepo.count({
           where: { createdAt: Between(currentStartDate, currentEndDate) },
         }),
@@ -98,20 +98,23 @@ export class StoreService {
       let percentageChange: number;
 
       if (
-        (storeCount == 0 && previousStoreCount === 0) ||
-        previousStoreCount == storeCount
+        (storesCount == 0 && previousStoresCount === 0) ||
+        previousStoresCount == storesCount
       ) {
         percentageChange = 0;
-      } else if (storeCount > previousStoreCount && previousStoreCount == 0) {
-        percentageChange = storeCount * +100;
-      } else if (previousStoreCount > storeCount && storeCount == 0) {
-        percentageChange = previousStoreCount * -100;
+      } else if (
+        storesCount > previousStoresCount &&
+        previousStoresCount == 0
+      ) {
+        percentageChange = storesCount * +100;
+      } else if (previousStoresCount > storesCount && storesCount == 0) {
+        percentageChange = previousStoresCount * -100;
       } else {
         percentageChange =
-          ((storeCount - previousStoreCount) / previousStoreCount) * 100;
+          ((storesCount - previousStoresCount) / previousStoresCount) * 100;
       }
 
-      return { count: storeCount, percentageChange };
+      return { count: storesCount, percentageChange };
     } catch (error) {
       console.error('An error occurred while counting the stores:', error);
     }

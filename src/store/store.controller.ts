@@ -41,10 +41,10 @@ export class StoreController {
   }
 
   @Get('/total-count/:period')
-  async getTotalStoreCount(
+  async getTotalStoresCount(
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
-    return await this.storeService.getTotalStoreCount(period);
+    return await this.storeService.getTotalStoresCount(period);
   }
 
   @Get(':id')

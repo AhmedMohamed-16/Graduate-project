@@ -47,10 +47,12 @@ export class ProductInventoryController {
   }
 
   @Get('/total-count/:period')
-  async getTotalStoreCount(
+  async getTotalProductInventoriesCount(
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
-    return await this.productInventoryService.getTotalStoreCount(period);
+    return await this.productInventoryService.getTotalProductInventoriesCount(
+      period,
+    );
   }
 
   @Get(':id')

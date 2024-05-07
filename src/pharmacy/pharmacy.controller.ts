@@ -43,7 +43,7 @@ export class PharmacyController {
   }
 
   @Get('/total-count/:period')
-  async getTotalStoreCount(
+  async getTotalPharmaciesCount(
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
     return await this.pharmacyService.getTotalPharmaciesCount(period);
