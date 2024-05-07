@@ -44,6 +44,12 @@ export class ProductInventoryService {
 
     const newProductInventory = this.productInventoryRepo.create({
       ...createProductInventoryDto,
+      priceAfterOffer: parseFloat(
+        (
+          product.publicPrice *
+          (1 - createProductInventoryDto.offerPercent / 100)
+        ).toFixed(2),
+      ),
       createdAt: new Date(),
       product: product,
       store: store,

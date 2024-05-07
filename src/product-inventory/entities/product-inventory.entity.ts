@@ -13,6 +13,9 @@ export class ProductInventory {
   @Column({ nullable: false })
   offerPercent: number;
 
+  @Column({ nullable: false, type: 'decimal', precision: 10, scale: 2 })
+  priceAfterOffer: number;
+
   @Column({ nullable: true })
   createdAt: Date;
 
