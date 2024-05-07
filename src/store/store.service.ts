@@ -63,54 +63,35 @@ export class StoreService {
   remove(id: number) {
     return `This action removes a #${id} store`;
   }
+
+  /**
+   * Calculates the total store count based on the specified period.
+   * If the period is "all-time," returns the overall store count.
+   * Otherwise, computes the store count within the specified date range.
+   * Calculates the percentage change between the current and previous store counts.
+   */
   async getTotalStoreCount(
     period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
-    let periodStart: Date,
-      periodEnd: Date,
-      previousPeriodStart: Date,
-      previousPeriodEnd: Date;
-
-    switch (period) {
-      case AllowedPeriods.DAY:
-        periodStart = startOfDay(new Date());
-        periodEnd = endOfDay(new Date());
-        previousPeriodStart = startOfDay(addDays(new Date(), -1)); // Previous day
-        previousPeriodEnd = endOfDay(addDays(new Date(), -1));
-        break;
-      case AllowedPeriods.WEEK:
-        periodStart = startOfWeek(new Date(), { weekStartsOn: 6 });
-        periodEnd = endOfWeek(new Date(), { weekStartsOn: 6 });
-        previousPeriodStart = startOfWeek(subWeeks(new Date(), 1), {
-          weekStartsOn: 6,
-        }); // Previous week
-        previousPeriodEnd = endOfWeek(subWeeks(new Date(), 1), {
-          weekStartsOn: 6,
-        });
-        break;
-      case AllowedPeriods.MONTH:
-        periodStart = startOfMonth(new Date());
-        periodEnd = endOfMonth(new Date());
-        previousPeriodStart = startOfMonth(subMonths(new Date(), 1)); // Previous month
-        previousPeriodEnd = endOfMonth(subMonths(new Date(), 1));
-        break;
-      case AllowedPeriods.YEAR:
-        periodStart = startOfYear(new Date());
-        periodEnd = endOfYear(new Date());
-        previousPeriodStart = startOfYear(subYears(new Date(), 1)); // Previous year
-        previousPeriodEnd = endOfYear(subYears(new Date(), 1));
-        break;
-      case AllowedPeriods.ALLTIME:
-        return { count: await this.storeRepo.count(), percentageChange: 0 };
+    if (period === AllowedPeriods.ALLTIME) {
+      const totalCount = await this.storeRepo.count();
+      return { count: totalCount, percentageChange: 0 };
     }
+
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = this.calculateDateRanges(period);
 
     try {
       const [storeCount, previousStoreCount] = await Promise.all([
         this.storeRepo.count({
-          where: { createdAt: Between(periodStart, periodEnd) },
+          where: { createdAt: Between(currentStartDate, currentEndDate) },
         }),
         this.storeRepo.count({
-          where: { createdAt: Between(previousPeriodStart, previousPeriodEnd) },
+          where: { createdAt: Between(previousStartDate, previousEndDate) },
         }),
       ]);
 
@@ -134,5 +115,58 @@ export class StoreService {
     } catch (error) {
       console.error('An error occurred while counting the stores:', error);
     }
+  }
+
+  /**
+   * Determines the start and end dates for the specified period (day, week, month, or year).
+   */
+  calculateDateRanges(period: AllowedPeriods): {
+    currentStartDate: Date;
+    currentEndDate: Date;
+    previousStartDate: Date;
+    previousEndDate: Date;
+  } {
+    let currentStartDate: Date,
+      currentEndDate: Date,
+      previousStartDate: Date,
+      previousEndDate: Date;
+
+    switch (period) {
+      case AllowedPeriods.DAY:
+        currentStartDate = startOfDay(new Date());
+        currentEndDate = endOfDay(new Date());
+        previousStartDate = startOfDay(addDays(new Date(), -1)); // Previous day
+        previousEndDate = endOfDay(addDays(new Date(), -1));
+        break;
+      case AllowedPeriods.WEEK:
+        currentStartDate = startOfWeek(new Date(), { weekStartsOn: 6 });
+        currentEndDate = endOfWeek(new Date(), { weekStartsOn: 6 });
+        previousStartDate = startOfWeek(subWeeks(new Date(), 1), {
+          weekStartsOn: 6,
+        }); // Previous week
+        previousEndDate = endOfWeek(subWeeks(new Date(), 1), {
+          weekStartsOn: 6,
+        });
+        break;
+      case AllowedPeriods.MONTH:
+        currentStartDate = startOfMonth(new Date());
+        currentEndDate = endOfMonth(new Date());
+        previousStartDate = startOfMonth(subMonths(new Date(), 1)); // Previous month
+        previousEndDate = endOfMonth(subMonths(new Date(), 1));
+        break;
+      case AllowedPeriods.YEAR:
+        currentStartDate = startOfYear(new Date());
+        currentEndDate = endOfYear(new Date());
+        previousStartDate = startOfYear(subYears(new Date(), 1)); // Previous year
+        previousEndDate = endOfYear(subYears(new Date(), 1));
+        break;
+      case AllowedPeriods.ALLTIME:
+    }
+    return {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    };
   }
 }

@@ -63,4 +63,6 @@ export class ProductInventoryService {
   remove(id: number) {
     return `This action removes a #${id} productInventory`;
   }
+
+  
 }
