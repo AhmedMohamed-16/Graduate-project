@@ -12,6 +12,8 @@ import { ProductInventoryService } from './product-inventory.service';
 import { CreateProductInventoryDto } from './dto/create-product-inventory.dto';
 import { UpdateProductInventoryDto } from './dto/update-product-inventory.dto';
 import { ProductInventory } from './entities/product-inventory.entity';
+import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
+import { AllowedPeriods } from 'src/common/enums/user-type.enum';
 
 @Controller('product-inventory')
 export class ProductInventoryController {
@@ -31,13 +33,6 @@ export class ProductInventoryController {
     return this.productInventoryService.findAll();
   }
 
-  @Get(':id')
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<ProductInventory> {
-    return await this.productInventoryService.findOne(+id);
-  }
-
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -49,5 +44,19 @@ export class ProductInventoryController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productInventoryService.remove(+id);
+  }
+
+  @Get('/total-count/:period')
+  async getTotalStoreCount(
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.productInventoryService.getTotalStoreCount(period);
+  }
+
+  @Get(':id')
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ProductInventory> {
+    return await this.productInventoryService.findOne(+id);
   }
 }
