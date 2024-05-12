@@ -51,8 +51,12 @@ export class CategoryService {
     return;
   }
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`;
+  async update(id: number, updateCategoryDto: UpdateCategoryDto):Promise<Category> {  
+    const updatedCategory = await this.findById( id );
+
+     await this.catRepo.update(id, updateCategoryDto);
+
+     return updatedCategory;
   }
 
   async remove(id: number): Promise<void> {

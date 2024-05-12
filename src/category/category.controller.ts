@@ -35,11 +35,11 @@ export class CategoryController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
+  async update(
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
-  ) {
-    return this.categoryService.update(+id, updateCategoryDto);
+  ): Promise<Category> {
+    return await this.categoryService.update(id, updateCategoryDto);
   }
 
   @Delete(':id')
