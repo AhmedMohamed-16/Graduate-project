@@ -96,10 +96,9 @@ export class AuthService {
           id: user.id,
           userName: user.userName,
           email: user.email,
-          phone: user.phoneNumber,
-          password: user.password,
-          usertype: UserType.ADMIN
-
+          phone:  user.phone,
+          password:  user.password,
+          userType: UserType.ADMIN,
         };
         break;
       case UserType.PHARMACY:
@@ -109,7 +108,7 @@ export class AuthService {
           email: user.email,
           contactNumber: user.contactNumber,
           isActive: user.isActive,
-          usertype: UserType.PHARMACY
+          userType: UserType.PHARMACY
         };
         break;
       case UserType.STORE:
@@ -117,7 +116,7 @@ export class AuthService {
           id: user.id,
           userName: user.userName,
           name: user.name,
-          usertype: UserType.STORE
+          userType: UserType.STORE
         };
         break;
     }
