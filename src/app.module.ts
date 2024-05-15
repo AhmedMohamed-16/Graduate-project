@@ -12,6 +12,8 @@ import { UploadModule } from './upload/upload.module';
 import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
 import { ProductInventoryModule } from './product-inventory/product-inventory.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './auth/guards/roles.guard';
 
 @Module({
   imports: [
@@ -28,8 +30,9 @@ import { ProductInventoryModule } from './product-inventory/product-inventory.mo
     CategoryModule,
     ProductModule,
     ProductInventoryModule,
+    
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ],
 })
 export class AppModule {}

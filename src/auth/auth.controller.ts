@@ -42,7 +42,6 @@ export class AuthController {
   @Post('register/admin')
   @UseInterceptors(NoFilesInterceptor())
   async registerAdmin(@Body() createUserDto: CreateAdminDto) {
-    console.log(createUserDto.userName, createUserDto.email);
 
     return await this.authService.register(createUserDto, UserType.ADMIN);
   }
