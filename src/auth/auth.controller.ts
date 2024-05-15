@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
   Request,
   UploadedFiles,
@@ -24,6 +25,7 @@ import {
   NoFilesInterceptor,
 } from '@nestjs/platform-express/multer';
 import { UploadService } from 'src/upload/upload.service';
+import { RefreshJwtGuard } from './guards/resresh-jwt-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -117,11 +119,11 @@ export class AuthController {
     );
   }
 
-  @Post('refresh')
+  @Get('refresh')
+  @UseGuards(RefreshJwtGuard)
   async refresh(
     @Request() req,
-    @Body('userType', UserTypeValidationPipe) userType: UserType,
   ) {
-    return await this.authService.refreshToken(req.user, userType);
+    return await this.authService.refreshToken(req.user);
   }
 }

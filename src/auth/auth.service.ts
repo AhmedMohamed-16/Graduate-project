@@ -79,8 +79,8 @@ export class AuthService {
     };
   }
 
-  async refreshToken(user: any, userType: UserType) {
-    const payload = this.getPayload(user, userType);
+  async refreshToken(user: any) {
+    const payload = this.getPayload(user,user.payload.userType);
 
     return {
       accessToken: await this.jwtService.signAsync(payload),

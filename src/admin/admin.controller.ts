@@ -28,7 +28,7 @@ export class AdminController {
   }
   @Get()
   @UseGuards(JwtAuthGaurd,RolesGuard)
-  @Roles(UserType.ADMIN)
+  @Roles(UserType.ADMIN,UserType.PHARMACY)
   findAll() {
     return this.adminService.findAll();
   }
