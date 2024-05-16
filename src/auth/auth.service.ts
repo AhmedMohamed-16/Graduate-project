@@ -9,6 +9,9 @@ import { CreateAdminDto } from 'src/admin/dto/create-admin.dto';
 import { CreatePharmacyDto } from 'src/pharmacy/dto/create-pharmacy.dto';
 import { CreateStoreDto } from 'src/store/dto/create-store.dto';
 import { CreateUserDto, User } from 'src/common/types/types';
+import { Admin } from 'src/admin/entities/admin.entity';
+import { Pharmacy } from 'src/pharmacy/entities/pharmacy.entity';
+import { Store } from 'src/store/entities/store.entity';
 
 @Injectable()
 export class AuthService {
@@ -50,7 +53,10 @@ export class AuthService {
     }
   }
 
-  async register(createUserDto: CreateUserDto, userType: UserType) {
+  async register(
+    createUserDto: CreateUserDto,
+    userType: UserType,
+  ): Promise<Admin | Pharmacy | Store> {
     switch (userType) {
       case UserType.ADMIN:
         return await this.adminService.create(createUserDto as CreateAdminDto);
@@ -79,8 +85,8 @@ export class AuthService {
     };
   }
 
-  async refreshToken(user: any) {
-    const payload = this.getPayload(user,user.payload.userType);
+  async refreshToken(user: any): Promise<{ accessToken: string }> {
+    const payload = this.getPayload(user, user.payload.userType);
 
     return {
       accessToken: await this.jwtService.signAsync(payload),
@@ -96,8 +102,8 @@ export class AuthService {
           id: user.id,
           userName: user.userName,
           email: user.email,
-          phone:  user.phone,
-          password:  user.password,
+          phone: user.phone,
+          password: user.password,
           userType: UserType.ADMIN,
         };
         break;
@@ -108,7 +114,7 @@ export class AuthService {
           email: user.email,
           contactNumber: user.contactNumber,
           isActive: user.isActive,
-          userType: UserType.PHARMACY
+          userType: UserType.PHARMACY,
         };
         break;
       case UserType.STORE:
@@ -116,7 +122,7 @@ export class AuthService {
           id: user.id,
           userName: user.userName,
           name: user.name,
-          userType: UserType.STORE
+          userType: UserType.STORE,
         };
         break;
     }

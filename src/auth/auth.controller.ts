@@ -15,7 +15,6 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { UserType } from 'src/common/enums/user-type.enum';
-import { UserTypeValidationPipe } from 'src/common/pipes/user-type-validation.pipe';
 import { CreateStoreDto } from 'src/store/dto/create-store.dto';
 import { CreatePharmacyDto } from 'src/pharmacy/dto/create-pharmacy.dto';
 import { CreateAdminDto } from 'src/admin/dto/create-admin.dto';
@@ -25,7 +24,8 @@ import {
   NoFilesInterceptor,
 } from '@nestjs/platform-express/multer';
 import { UploadService } from 'src/upload/upload.service';
-import { RefreshJwtGuard } from './guards/resresh-jwt-auth.guard';
+import { RefreshJwtAuthGuard } from './guards/resresh-jwt-auth.guard';
+import { Admin } from 'src/admin/entities/admin.entity';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -44,7 +44,6 @@ export class AuthController {
   @Post('register/admin')
   @UseInterceptors(NoFilesInterceptor())
   async registerAdmin(@Body() createUserDto: CreateAdminDto) {
-
     return await this.authService.register(createUserDto, UserType.ADMIN);
   }
 
@@ -120,10 +119,8 @@ export class AuthController {
   }
 
   @Get('refresh')
-  @UseGuards(RefreshJwtGuard)
-  async refresh(
-    @Request() req,
-  ) {
+  @UseGuards(RefreshJwtAuthGuard)
+  async refresh(@Request() req): Promise<{ accessToken: string }> {
     return await this.authService.refreshToken(req.user);
   }
 }
