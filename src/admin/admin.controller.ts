@@ -15,7 +15,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/authorize.decorator';
 import { UserType } from 'src/common/enums/user-type.enum';
 import { JwtAuthGaurd } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { RoleGuard } from 'src/auth/guards/role.guard';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -27,8 +27,8 @@ export class AdminController {
     return this.adminService.create(createAdminDto);
   }
   @Get()
-  @UseGuards(JwtAuthGaurd,RolesGuard)
-  @Roles(UserType.ADMIN,UserType.PHARMACY)
+  @UseGuards(JwtAuthGaurd, RoleGuard)
+  @Roles(UserType.ADMIN)
   findAll() {
     return this.adminService.findAll();
   }

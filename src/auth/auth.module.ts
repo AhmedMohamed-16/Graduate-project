@@ -12,7 +12,6 @@ import { UploadModule } from 'src/upload/upload.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt-stategy.strategy';
 import { Reflector } from '@nestjs/core';
-import { RefreshJwtGuard } from './guards/resresh-jwt-auth.guard';
 import { RefreshJwtStrategy } from './strategies/refresh-jwt-stategy.strategy';
 
 @Module({
@@ -27,12 +26,11 @@ import { RefreshJwtStrategy } from './strategies/refresh-jwt-stategy.strategy';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
-        signOptions: {expiresIn:configService.get('JWT_EXPIRATION_TIME')},
+        signOptions: { expiresIn: configService.get('JWT_EXPIRATION_TIME') },
       }),
     }),
-    
   ],
-  providers: [AuthService,JwtStrategy,Reflector,RefreshJwtStrategy],
+  providers: [AuthService, JwtStrategy, Reflector, RefreshJwtStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { UserTypeValidationPipe } from 'src/common/pipes/user-type-validation.pipe';
 
@@ -19,7 +15,7 @@ export class LocalAuthGuard implements CanActivate {
     if (!userName || !password || !userType) {
       throw new UnauthorizedException('Missing credentials');
     }
-    
+
     const validatedUserType = await new UserTypeValidationPipe().transform(
       userType,
       { type: 'body' },
