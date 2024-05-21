@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProductInventoryDto } from './dto/create-product-inventory.dto';
 import { UpdateProductInventoryDto } from './dto/update-product-inventory.dto';
 import { Between, Repository } from 'typeorm';
@@ -55,7 +59,13 @@ export class ProductInventoryService {
       store: store,
     });
 
-    await this.productInventoryRepo.save(newProductInventory);
+    try {
+      await this.productInventoryRepo.save(newProductInventory);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create ProductInventory',
+      );
+    }
 
     return newProductInventory;
   }
@@ -86,19 +96,24 @@ export class ProductInventoryService {
   }
 
   /**
-   * Calculates the total ProductInventories count based on the specified period.
-   * If the period is "all-time," returns the overall ProductInventory count.
-   * Otherwise, computes the ProductInventories count within the specified date range.
-   * Calculates the percentage change between the current and previous ProductInventories counts.
+   * Calculates the total count of "ActiveProducts" based on the specified period.
+   * @param period - The allowed period (either "all-time", "day", "week", "month", or "year").
+   * @returns An object containing the current count of ActiveProducts and the percentage change from the previous period.
    */
-  async getTotalProductInventoriesCount(
+  async getActiveProductsCount(
     period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
     if (period === AllowedPeriods.ALLTIME) {
-      const totalCount = await this.productInventoryRepo.count();
-      return { count: totalCount, percentageChange: 0 };
+      const allTimeProductCount =
+        await this.calculateActiveProductCountInPeriod();
+
+      return {
+        count: allTimeProductCount,
+        percentageChange: 0,
+      };
     }
 
+    // Calculate the start and end dates for the current and previous periods
     const {
       currentStartDate,
       currentEndDate,
@@ -107,42 +122,25 @@ export class ProductInventoryService {
     } = this.calculateDateRanges(period);
 
     try {
-      const [ProductInventoriesCount, previousProductInventoriesCount] =
-        await Promise.all([
-          this.productInventoryRepo.count({
-            where: { createdAt: Between(currentStartDate, currentEndDate) },
-          }),
-          this.productInventoryRepo.count({
-            where: { createdAt: Between(previousStartDate, previousEndDate) },
-          }),
-        ]);
+      // Fetch the product counts for the current period
+      const currentCount = await this.calculateActiveProductCountInPeriod(
+        currentStartDate,
+        currentEndDate,
+      );
+      // Fetch the product counts for the previous period
+      const previousCount = await this.calculateActiveProductCountInPeriod(
+        previousStartDate,
+        previousEndDate,
+      );
 
-      let percentageChange: number;
+      // Calculate the percentage change between the current and previous counts
+      const percentageChange = this.calculatePercentageChange(
+        currentCount,
+        previousCount,
+      );
 
-      if (
-        (ProductInventoriesCount == 0 &&
-          previousProductInventoriesCount === 0) ||
-        previousProductInventoriesCount == ProductInventoriesCount
-      ) {
-        percentageChange = 0;
-      } else if (
-        ProductInventoriesCount > previousProductInventoriesCount &&
-        previousProductInventoriesCount == 0
-      ) {
-        percentageChange = ProductInventoriesCount * +100;
-      } else if (
-        previousProductInventoriesCount > ProductInventoriesCount &&
-        ProductInventoriesCount == 0
-      ) {
-        percentageChange = previousProductInventoriesCount * -100;
-      } else {
-        percentageChange =
-          ((ProductInventoriesCount - previousProductInventoriesCount) /
-            previousProductInventoriesCount) *
-          100;
-      }
-
-      return { count: ProductInventoriesCount, percentageChange };
+      // Return the current count and percentage change
+      return { count: currentCount, percentageChange };
     } catch (error) {
       console.error(
         'An error occurred while counting the ProductInventory:',
@@ -152,9 +150,70 @@ export class ProductInventoryService {
   }
 
   /**
-   * Determines the start and end dates for the specified period (day, week, month, or year).
+   * Calculates the count of active products within a specified date range or for all time.
+   * @param startDate - The start date of the date range (optional).
+   * @param endDate - The end date of the date range (optional).
+   * @returns The count of active products in the specified period.
    */
-  calculateDateRanges(period: AllowedPeriods): {
+  private async calculateActiveProductCountInPeriod(
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<number> {
+    const queryBuilder =
+      this.productInventoryRepo.createQueryBuilder('productInventory');
+    queryBuilder.select(
+      'COUNT(DISTINCT productInventory.productId)',
+      'productsCount',
+    );
+
+    if (startDate && endDate) {
+      queryBuilder.where(
+        'productInventory.createdAt BETWEEN :startDate AND :endDate',
+        {
+          startDate,
+          endDate,
+        },
+      );
+    }
+
+    const result = await queryBuilder.getRawOne();
+    return result.productsCount;
+  }
+
+  /**
+   * Calculates the percentage change between the current and previous counts of active products.
+   *
+   * @param currentCount - The count of active products in the current period.
+   * @param previousCount - The count of active products in the previous period.
+   *
+   * @returns The percentage change between the current and previous counts.
+   */
+  private calculatePercentageChange(
+    currentCount: number,
+    previousCount: number,
+  ): number {
+    console.log(currentCount, previousCount);
+    if (currentCount == 0 && previousCount === 0) {
+      console.log(0);
+
+      return 0;
+    } else if (previousCount == 0 && currentCount > 0) {
+      return 100;
+    } else if (currentCount == 0 && previousCount > 0) {
+      return -100;
+    } else if (currentCount !== 0 && previousCount !== 0) {
+      return ((currentCount - previousCount) / previousCount) * 100;
+    }
+  }
+
+  /**
+   * Determines the start and end dates for the specified period (day, week, month, or year).
+   * @param period - The allowed period (either "day", "week", "month", or "year").
+   * currentPeriod : [thisDay ,thisWeek, thisMonth, thisYear]
+   * previousPeriod : [yasterDay ,lastWeek, lastMonth, lastYear]
+   * @returns An object containing the start and end dates for the current and previous periods.
+   */
+  private calculateDateRanges(period: AllowedPeriods): {
     currentStartDate: Date;
     currentEndDate: Date;
     previousStartDate: Date;

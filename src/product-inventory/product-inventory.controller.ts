@@ -50,9 +50,7 @@ export class ProductInventoryController {
   async getTotalProductInventoriesCount(
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
-    return await this.productInventoryService.getTotalProductInventoriesCount(
-      period,
-    );
+    return await this.productInventoryService.getActiveProductsCount(period);
   }
 
   @Get(':id')
