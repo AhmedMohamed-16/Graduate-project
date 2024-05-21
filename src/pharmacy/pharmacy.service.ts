@@ -5,21 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Pharmacy } from './entities/pharmacy.entity';
 import { Between, Repository } from 'typeorm';
 import { PharmacistService } from 'src/pharmacist/pharmacist.service';
-import {
-  startOfDay,
-  endOfDay,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  startOfYear,
-  endOfYear,
-  subYears,
-  subMonths,
-  subWeeks,
-  addDays,
-} from 'date-fns';
+
 import { AllowedPeriods } from 'src/common/enums/user-type.enum';
+import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
 
 @Injectable()
 export class PharmacyService {
@@ -39,7 +27,6 @@ export class PharmacyService {
 
     const pharmacist = await this.pharmacistService.create({
       ...createPharmacyDto.pharmacist,
-      // createdAt: new Date()
     });
 
     const newPharmacy = this.pharmacyRepo.create({
@@ -72,10 +59,9 @@ export class PharmacyService {
   }
 
   /**
-   * Calculates the total Pharmacies count based on the specified period.
-   * If the period is "all-time," returns the overall store count.
-   * Otherwise, computes the Pharmacies count within the specified date range.
-   * Calculates the percentage change between the current and previous Pharmacies counts.
+   * Calculates the total count of "Pharmacies" based on the specified period.
+   * @param period - The allowed period (either "all-time", "day", "week", "month", or "year").
+   * @returns An object containing the current count of Pharmacies and the percentage change from the previous period.
    */
   async getTotalPharmaciesCount(
     period: AllowedPeriods,
@@ -85,15 +71,16 @@ export class PharmacyService {
       return { count: totalCount, percentageChange: 0 };
     }
 
+    // Calculate the start and end dates for the current and previous periods
     const {
       currentStartDate,
       currentEndDate,
       previousStartDate,
       previousEndDate,
-    } = this.calculateDateRanges(period);
+    } = CalculationsHelper.calculateDateRanges(period);
 
     try {
-      const [pharmaciesCount, previousPharmaciesCount] = await Promise.all([
+      const [currentCount, previousCount] = await Promise.all([
         this.pharmacyRepo.count({
           where: { createdAt: Between(currentStartDate, currentEndDate) },
         }),
@@ -102,86 +89,16 @@ export class PharmacyService {
         }),
       ]);
 
-      let percentageChange: number;
+      // Calculate the percentage change between the current and previous counts
+      const percentageChange: number =
+        CalculationsHelper.calculatePercentageChange(
+          currentCount,
+          previousCount,
+        );
 
-      if (
-        (pharmaciesCount == 0 && previousPharmaciesCount === 0) ||
-        previousPharmaciesCount == pharmaciesCount
-      ) {
-        percentageChange = 0;
-      } else if (
-        pharmaciesCount > previousPharmaciesCount &&
-        previousPharmaciesCount == 0
-      ) {
-        percentageChange = pharmaciesCount * +100;
-      } else if (
-        previousPharmaciesCount > pharmaciesCount &&
-        pharmaciesCount == 0
-      ) {
-        percentageChange = previousPharmaciesCount * -100;
-      } else {
-        percentageChange =
-          ((pharmaciesCount - previousPharmaciesCount) /
-            previousPharmaciesCount) *
-          100;
-      }
-
-      return { count: pharmaciesCount, percentageChange };
+      return { count: currentCount, percentageChange };
     } catch (error) {
       console.error('An error occurred while counting the stores:', error);
     }
-  }
-
-  /**
-   * Determines the start and end dates for the specified period (day, week, month, or year).
-   */
-  calculateDateRanges(period: AllowedPeriods): {
-    currentStartDate: Date;
-    currentEndDate: Date;
-    previousStartDate: Date;
-    previousEndDate: Date;
-  } {
-    let currentStartDate: Date,
-      currentEndDate: Date,
-      previousStartDate: Date,
-      previousEndDate: Date;
-
-    switch (period) {
-      case AllowedPeriods.DAY:
-        currentStartDate = startOfDay(new Date());
-        currentEndDate = endOfDay(new Date());
-        previousStartDate = startOfDay(addDays(new Date(), -1)); // Previous day
-        previousEndDate = endOfDay(addDays(new Date(), -1));
-        break;
-      case AllowedPeriods.WEEK:
-        currentStartDate = startOfWeek(new Date(), { weekStartsOn: 6 });
-        currentEndDate = endOfWeek(new Date(), { weekStartsOn: 6 });
-        previousStartDate = startOfWeek(subWeeks(new Date(), 1), {
-          weekStartsOn: 6,
-        }); // Previous week
-        previousEndDate = endOfWeek(subWeeks(new Date(), 1), {
-          weekStartsOn: 6,
-        });
-        break;
-      case AllowedPeriods.MONTH:
-        currentStartDate = startOfMonth(new Date());
-        currentEndDate = endOfMonth(new Date());
-        previousStartDate = startOfMonth(subMonths(new Date(), 1)); // Previous month
-        previousEndDate = endOfMonth(subMonths(new Date(), 1));
-        break;
-      case AllowedPeriods.YEAR:
-        currentStartDate = startOfYear(new Date());
-        currentEndDate = endOfYear(new Date());
-        previousStartDate = startOfYear(subYears(new Date(), 1)); // Previous year
-        previousEndDate = endOfYear(subYears(new Date(), 1));
-        break;
-      case AllowedPeriods.ALLTIME:
-    }
-    return {
-      currentStartDate,
-      currentEndDate,
-      previousStartDate,
-      previousEndDate,
-    };
   }
 }
