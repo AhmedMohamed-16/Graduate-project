@@ -14,8 +14,10 @@ import { UpdateProductInventoryDto } from './dto/update-product-inventory.dto';
 import { ProductInventory } from './entities/product-inventory.entity';
 import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
 import { AllowedPeriods } from 'src/common/enums/user-type.enum';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('product-inventory')
+@ApiTags('ProductInventory')
+@Controller('products-inventory')
 export class ProductInventoryController {
   constructor(
     private readonly productInventoryService: ProductInventoryService,
