@@ -58,47 +58,5 @@ export class PharmacyService {
     return `This action removes a #${id} pharmacy`;
   }
 
-  /**
-   * Calculates the total count of "Pharmacies" based on the specified period.
-   * @param period - The allowed period (either "all-time", "day", "week", "month", or "year").
-   * @returns An object containing the current count of Pharmacies and the percentage change from the previous period.
-   */
-  async getTotalPharmaciesCount(
-    period: AllowedPeriods,
-  ): Promise<{ count: number; percentageChange: number }> {
-    if (period === AllowedPeriods.ALLTIME) {
-      const totalCount = await this.pharmacyRepo.count();
-      return { count: totalCount, percentageChange: 0 };
-    }
-
-    // Calculate the start and end dates for the current and previous periods
-    const {
-      currentStartDate,
-      currentEndDate,
-      previousStartDate,
-      previousEndDate,
-    } = CalculationsHelper.calculateDateRanges(period);
-
-    try {
-      const [currentCount, previousCount] = await Promise.all([
-        this.pharmacyRepo.count({
-          where: { createdAt: Between(currentStartDate, currentEndDate) },
-        }),
-        this.pharmacyRepo.count({
-          where: { createdAt: Between(previousStartDate, previousEndDate) },
-        }),
-      ]);
-
-      // Calculate the percentage change between the current and previous counts
-      const percentageChange: number =
-        CalculationsHelper.calculatePercentageChange(
-          currentCount,
-          previousCount,
-        );
-
-      return { count: currentCount, percentageChange };
-    } catch (error) {
-      console.error('An error occurred while counting the stores:', error);
-    }
-  }
+  
 }
