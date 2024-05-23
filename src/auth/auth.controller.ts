@@ -118,7 +118,7 @@ export class AuthController {
     );
   }
 
-  @Get('refresh')
+  @Post('refresh')
   @UseGuards(RefreshJwtAuthGuard)
   async refresh(@Request() req): Promise<{ accessToken: string }> {
     return await this.authService.refreshToken(req.user);
