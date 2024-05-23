@@ -15,7 +15,7 @@ import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
 import { AllowedPeriods } from 'src/common/enums/user-type.enum';
 
 @ApiTags('Pharmacy')
-@Controller('pharmacy')
+@Controller('pharmacies')
 export class PharmacyController {
   constructor(private readonly pharmacyService: PharmacyService) {}
 

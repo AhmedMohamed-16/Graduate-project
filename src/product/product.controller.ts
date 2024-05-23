@@ -17,8 +17,10 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { UploadService } from 'src/upload/upload.service';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('product')
+@ApiTags('Product')
+@Controller('products')
 export class ProductController {
   constructor(
     private readonly productService: ProductService,

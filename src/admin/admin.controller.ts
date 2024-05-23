@@ -18,7 +18,7 @@ import { JwtAuthGaurd } from 'src/auth/guards/jwt-auth.guard';
 import { RoleGuard } from 'src/auth/guards/role.guard';
 
 @ApiTags('Admin')
-@Controller('admin')
+@Controller('admins')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
