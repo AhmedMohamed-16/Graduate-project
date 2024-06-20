@@ -22,3 +22,15 @@ export class AllowedPeriodPipe implements PipeTransform {
     return value;
   }
 }
+
+export class IsBooleanPipes implements PipeTransform {
+  transform(value: any): boolean {
+    const parsedValue = String(value).toLowerCase(); // Convert to lowercase for case-insensitivity
+
+    if (parsedValue === 'true' || parsedValue === 'false') {
+      return parsedValue === 'true';
+    } else {
+      throw new BadRequestException('Invalid boolean value');
+    }
+  }
+}

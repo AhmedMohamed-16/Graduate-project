@@ -3,11 +3,8 @@ import { CreatePharmacyDto } from './dto/create-pharmacy.dto';
 import { UpdatePharmacyDto } from './dto/update-pharmacy.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pharmacy } from './entities/pharmacy.entity';
-import { Between, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PharmacistService } from 'src/pharmacist/pharmacist.service';
-
-import { AllowedPeriods } from 'src/common/enums/user-type.enum';
-import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
 
 @Injectable()
 export class PharmacyService {
@@ -57,6 +54,4 @@ export class PharmacyService {
   remove(id: number) {
     return `This action removes a #${id} pharmacy`;
   }
-
-  
 }

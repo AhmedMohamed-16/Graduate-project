@@ -51,4 +51,11 @@ export class StoreController {
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return await this.storeService.findById(+id);
   }
+
+   // @Get('/top-selling-stores/:isTop')
+  // async getTopOrBottomStores(
+  //   @Param('isTop', IsBooleanPipes) isTop,
+  // ): Promise<Store[]> {
+  //   return await this.storeService.getTopOrBottomStores(isTop);
+  // }
 }

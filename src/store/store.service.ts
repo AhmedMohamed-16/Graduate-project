@@ -94,4 +94,26 @@ export class StoreService {
       console.error('An error occurred while counting the stores:', error);
     }
   }
+
+  /**
+   * Retrieves either the top 5 or bottom 5 stores based on @param isTop.
+   * @param isTop - Determines whether to retrieve top stores (true) or bottom stores (false).
+   */
+  // async getTopOrBottomStores(isTop: boolean): Promise<Store[]> {
+  //   const order = isTop ? 'DESC' : 'ASC';
+
+  //   const topStores = await this.storeRepo
+  //     .createQueryBuilder('store')
+  //     .leftJoinAndSelect('store.productInventories', 'productInventory')
+  //     .leftJoinAndSelect('productInventory.OrderItemDetail', 'orderItem')
+  //     .select('store.id', 'storeId')
+  //     .addSelect('store.storeName', 'storeName')
+  //     .addSelect('SUM(orderItem.price)', 'price')
+  //     .groupBy('store.id')
+  //     .orderBy('Price', order)
+  //     .limit(5)
+  //     .getRawMany();
+
+  //   return topStores;
+  // }
 }
