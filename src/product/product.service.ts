@@ -48,7 +48,19 @@ export class ProductService {
   }
 
   async findAll(): Promise<Product[]> {
-    const existingProducts = await this.productRepo.find();
+    const existingProducts = await this.productRepo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category')
+      .select([
+        'product.id',
+        'product.image',
+        'product.name',
+        'product.unitsPerPackage',
+        'product.publicPrice',
+
+        'category.name',
+      ])
+      .getMany();
 
     if (!existingProducts) throw new NotFoundException(`there is no products`);
     else return existingProducts;
