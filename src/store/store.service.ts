@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { AllowedPeriods } from 'src/common/enums/user-type.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
+import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
 
 @Injectable()
 export class StoreService {
@@ -99,7 +100,7 @@ export class StoreService {
    * Retrieves either the top 5 or bottom 5 stores based on @param isTop.
    * @param isTop - Determines whether to retrieve top stores (true) or bottom stores (false).
    */
-  // async getTopOrBottomStores(isTop: boolean): Promise<Store[]> {
+  // async getTopOrBottomStores(isTop: IsBooleanPipes): Promise<Store[]> {
   //   const order = isTop ? 'DESC' : 'ASC';
 
   //   const topStores = await this.storeRepo
