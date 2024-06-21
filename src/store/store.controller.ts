@@ -13,7 +13,8 @@ import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AllowedPeriods } from 'src/common/enums/user-type.enum';
-import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
+import { AllowedPeriodPipe, IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
+import { Store } from './entities/store.entity';
 
 @ApiTags('Store')
 @Controller('stores')
@@ -52,9 +53,9 @@ export class StoreController {
     return await this.storeService.findById(+id);
   }
 
-   // @Get('/top-selling-stores/:isTop')
+  // @Get('/top-selling-stores/:isTop')
   // async getTopOrBottomStores(
-  //   @Param('isTop', IsBooleanPipes) isTop,
+  //   @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
   // ): Promise<Store[]> {
   //   return await this.storeService.getTopOrBottomStores(isTop);
   // }

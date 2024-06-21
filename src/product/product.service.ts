@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { CategoryService } from 'src/category/category.service';
+import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
 
 @Injectable()
 export class ProductService {
@@ -86,4 +87,28 @@ export class ProductService {
 
     return !!existingProduct;
   }
+  /**
+   * Retrieve either the top 5 or bottom 5 products upon more demand based on @param isTop.
+   * @param isTop - Determines whether to retrieve top products (true) or bottom products (false).
+   */
+  // async getTopOrBottomProductsByDemand(isTop:IsBooleanPipes): Promise<Product[]> {
+  //   const order = isTop ? 'DESC' : 'ASC';
+
+  //   const topProducts = await this.productRepo
+  //     .createQueryBuilder('product')
+  //     .leftJoinAndSelect('product.productInventories', 'productInventory')
+  //     .leftJoinAndSelect('productInventory.OrderItemDetail', 'orderItem')
+  //     .leftJoinAndSelect('orderItem.orders', 'order')
+  //     .select('product.id', 'productId')
+  //     .addSelect('product.name', 'productName')
+  //     .addSelect('SUM(orderItem.quantity)', 'quantity')
+  //     .addSelect('SUM(orderItem.price)', 'totalSales')
+  //     .addSelect('COUNT(DISTINCT order.id)', 'orderCount')
+  //     .groupBy('product.id')
+  //     .orderBy('quantity', order)
+  //     .limit(5)
+  //     .getRawMany();
+
+  //   return topProducts;
+  // }
 }
