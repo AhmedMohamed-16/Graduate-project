@@ -20,7 +20,7 @@ export class UploadService {
     const filename = `${Date.now()}-${path.basename(file.originalname)}`;
 
     // Directory where files will be stored
-    const uploadsDir = path.join(__dirname , '../uploads'); // Use process.cwd() = root directory
+    const uploadsDir = path.join(__dirname , 'uploads'); // Use process.cwd() = root directory
 
     try {
       await fs.mkdir(uploadsDir, { recursive: true });

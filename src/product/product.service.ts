@@ -10,13 +10,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { CategoryService } from 'src/category/category.service';
 import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
-
+import { join } from 'path';
+import * as fs from 'fs/promises'; 
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
     private readonly catService: CategoryService,
+    private readonly configService: ConfigService,
+
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
@@ -48,10 +52,40 @@ export class ProductService {
   }
 
   async findAll(): Promise<Product[]> {
-    const existingProducts = await this.productRepo.find();
+    const existingProducts = await this.productRepo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category')
+      .select([
+        'product.id',
+        'product.image',
+        'product.name',
+        'product.unitsPerPackage',
+        'product.publicPrice',
 
-    if (!existingProducts) throw new NotFoundException(`there is no products`);
-    else return existingProducts;
+        'category.name',
+      ])
+      .getMany();
+      if (!existingProducts) throw new NotFoundException('No products found');
+
+      // const productsWithImages = await Promise.all(
+      //   existingProducts.map(async (product) => {
+      //     const imagePath = join(process.cwd(), '', product.image);
+      //     const imageBuffer = await fs.readFile(imagePath);
+      //     const imageBase64 = imageBuffer.toString('base64');
+      //     return {
+      //       ...product,
+      //       image: imageBase64,
+      //     };
+      //   }),
+      // );
+  
+      // return productsWithImages;
+  
+      return existingProducts.map((product) => ({
+        ...product,
+        image: `${this.configService.get('BASE_URL')}/${product.image}`,
+      }));
+    
   }
 
   async findOne(id: number): Promise<Product> {

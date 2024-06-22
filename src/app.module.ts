@@ -15,7 +15,8 @@ import { UploadModule } from './upload/upload.module';
 import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
 import { ProductInventoryModule } from './product-inventory/product-inventory.module';
-
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +30,11 @@ import { ProductInventoryModule } from './product-inventory/product-inventory.mo
           limit: config.get<number>('THROTTLER_LIMIT'),
         },
       ],
+    }), 
+
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'dist/upload/uploads'),
+      serveRoot: '/uploads',
     }),
 
     DatabaseModule,
