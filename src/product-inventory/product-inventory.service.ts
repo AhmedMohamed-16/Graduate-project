@@ -27,7 +27,7 @@ export class ProductInventoryService {
     createProductInventoryDto: CreateProductInventoryDto,
   ): Promise<ProductInventory> {
     // Fetch the Product and Store entities by their IDs
-    const product = await this.productService.findOne(
+    const product = await this.productService.findById(
       createProductInventoryDto.productId,
     );
     const store = await this.storeService.findById(
