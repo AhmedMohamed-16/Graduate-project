@@ -23,11 +23,9 @@ export class PharmacyService {
     }
 
     const pharmacist = await this.pharmacistService.create({
-      ... createPharmacyDto.pharmacist,
-      // createdAt: new Date()
-    }
-     
-    );
+ 
+      ...createPharmacyDto.pharmacist,
+    }); 
 
     const newPharmacy = this.pharmacyRepo.create({
       ...createPharmacyDto,
@@ -42,8 +40,8 @@ export class PharmacyService {
     return `This action returns all pharmacy`;
   }
 
-  findOne(id: number) {
-    return this.pharmacyRepo.findOneBy({ id })
+  findOne(id: number) { 
+    return this.pharmacyRepo.findOneBy({ id }) 
   }
 
   async findByUserName(userName: string): Promise<Pharmacy | undefined> {
@@ -56,11 +54,11 @@ export class PharmacyService {
 
   remove(id: number) {
     return `This action removes a #${id} pharmacy`;
-  }
+  } 
 
   async getOrdersByID(id:number) {
     const user = await this.pharmacyRepo.findOne( { where: { id},relations:['order', 'order.orderDetail','order.orderDetail.productInventory']}) ;
     
     return user ; 
-}
+} 
 }

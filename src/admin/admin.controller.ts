@@ -12,9 +12,13 @@ import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/common/decorators/authorize.decorator';
+import { UserType } from 'src/common/enums/user-type.enum';
+import { JwtAuthGaurd } from 'src/auth/guards/jwt-auth.guard';
+import { RoleGuard } from 'src/auth/guards/role.guard';
 
 @ApiTags('Admin')
-@Controller('admin')
+@Controller('admins')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -23,6 +27,9 @@ export class AdminController {
     return this.adminService.create(createAdminDto);
   }
   @Get()
+  
+  @UseGuards(JwtAuthGaurd, RoleGuard)
+  @Roles(UserType.ADMIN) 
   findAll() {
     return this.adminService.findAll();
   }

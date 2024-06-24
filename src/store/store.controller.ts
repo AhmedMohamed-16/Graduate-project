@@ -12,9 +12,13 @@ import { StoreService } from './store.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { ApiTags } from '@nestjs/swagger';
+ 
+import { AllowedPeriods } from 'src/common/enums/user-type.enum';
+import { AllowedPeriodPipe, IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
+import { Store } from './entities/store.entity';
 
 @ApiTags('Store')
-@Controller('store')
+@Controller('stores') 
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
@@ -39,12 +43,24 @@ export class StoreController {
   }
 
   @Get('/total-count/:period')
-  async getTotalStoreCount(@Param('period') period: string): Promise<number> {
-    return await this.storeService.getTotalStoreCount(period);
+ 
+  async getTotalStoresCount(
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.storeService.getTotalStoresCount(period);
+ 
   }
 
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return await this.storeService.findById(+id);
   }
+ 
+
+  // @Get('/top-selling-stores/:isTop')
+  // async getTopOrBottomStores(
+  //   @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
+  // ): Promise<Store[]> {
+  //   return await this.storeService.getTopOrBottomStores(isTop);
+  // } 
 }

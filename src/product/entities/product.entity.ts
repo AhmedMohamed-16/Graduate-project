@@ -22,15 +22,17 @@ export class Product {
   @Column({ nullable: false })
   image: string;
 
+ 
+  @Column({ nullable: false, type: 'decimal', precision: 10, scale: 2 })
+  publicPrice: number;
+ 
   @Column({ nullable: false })
   unitsPerPackage: number; // Number of tablets or ampoules per box
 
   @Column({ nullable: false })
-  companyName: string;////manufacturer 
-
-
-  @Column({ nullable: false, type: 'decimal', precision: 10, scale: 2 })
-  publicPrice: number;
+ 
+  companyName: string;
+ 
   // Optional columns
 
   @Column('text', { array: true, nullable: true })
@@ -50,7 +52,8 @@ export class Product {
 
   // Relationship with Category Entity
   @ManyToOne(() => Category, (category) => category.products, {
-     cascade: true,
+ 
+    // cascade: true, 
   })
   category: Category;
 

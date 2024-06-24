@@ -3,23 +3,25 @@ version: '3.9'
 services:
   postgres:
     image: postgres:14
-    container_name: pharmaStore_pg_db_connection
+
+    container_name: pharmaStore_pg_db
     restart: always
     environment:
-      POSTGRES_USER: root-copy
+      POSTGRES_USER: root
       POSTGRES_PASSWORD: root7October
       POSTGRES_DB: PharmaStore_DB
     volumes:
-      - pharmaStore_pg_db-copy:/data/postgres
+      - pharmaStore_pg_db:/data/postgres
     ports:
       - 5432:5432
 
   adminer:
     image: adminer
-    container_name: pharmaStore_pg_db_adminer
+
+    container_name: pharmaStore_pg_db_admin
     restart: always
     ports:
       - 8080:8080
 
 volumes:
-  pharmaStore_pg_db-copy:
+  pharmaStore_pg_db:

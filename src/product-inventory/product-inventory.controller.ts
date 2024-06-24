@@ -12,8 +12,13 @@ import { ProductInventoryService } from './product-inventory.service';
 import { CreateProductInventoryDto } from './dto/create-product-inventory.dto';
 import { UpdateProductInventoryDto } from './dto/update-product-inventory.dto';
 import { ProductInventory } from './entities/product-inventory.entity';
+ 
+import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
+import { AllowedPeriods } from 'src/common/enums/user-type.enum';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('product-inventory')
+@ApiTags('ProductInventory')
+@Controller('products-inventory') 
 export class ProductInventoryController {
   constructor(
     private readonly productInventoryService: ProductInventoryService,
@@ -30,14 +35,9 @@ export class ProductInventoryController {
   findAll(): Promise<ProductInventory[]> {
     return this.productInventoryService.findAll();
   }
-
-  @Get(':id')
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<ProductInventory> {
-    return await this.productInventoryService.findOne(+id);
-  }
-
+ 
+ 
+ 
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -50,4 +50,19 @@ export class ProductInventoryController {
   remove(@Param('id') id: string) {
     return this.productInventoryService.remove(+id);
   }
+ 
+  @Get('/total-count/:period')
+  async getTotalProductInventoriesCount(
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.productInventoryService.getActiveProductsCount(period);
+  }
+
+  @Get(':id')
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ProductInventory> {
+    return await this.productInventoryService.findOne(+id);
+  } 
+  
 }

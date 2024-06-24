@@ -1,7 +1,10 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+ 
+import { OrderDetail } from 'src/order/entities/order-details.entity';
+ 
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn ,OneToMany} from 'typeorm';
 import { Product } from 'src/product/entities/product.entity';
 import { Store } from 'src/store/entities/store.entity';
-import { OrderDetail } from 'src/order/entities/order-details.entity';
+ 
 
 @Entity()
 export class ProductInventory {
@@ -14,10 +17,14 @@ export class ProductInventory {
   @Column({ nullable: false })
   offerPercent: number;
 
-  @CreateDateColumn({ nullable: true })
+ 
+  @Column({ nullable: false, type: 'decimal', precision: 10, scale: 2 })
+  priceAfterOffer: number;
+
+  @Column({ nullable: true })
   createdAt: Date;
 
-  @UpdateDateColumn({ nullable: true })
+  @Column({ nullable: true })
   modifiedAt: Date;
 
   //price after offer
@@ -32,8 +39,8 @@ export class ProductInventory {
     cascade: true,
   })
   store: Store;
-
+ 
   @OneToMany(() =>OrderDetail, (orderDetail:OrderDetail) => orderDetail.productInventory )
   orderDetail:OrderDetail[];
-
+ 
 }

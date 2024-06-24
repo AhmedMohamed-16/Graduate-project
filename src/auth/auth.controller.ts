@@ -3,6 +3,8 @@ import {
   BadRequestException,
   Body,
   Controller,
+ 
+  Get, 
   Post,
   Request,
   UploadedFiles,
@@ -14,7 +16,9 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { UserType } from 'src/common/enums/user-type.enum';
+ 
 import { UserTypeValidationPipe } from 'src/common/pipes/user-type-validation.pipe';
+ 
 import { CreateStoreDto } from 'src/store/dto/create-store.dto';
 import { CreatePharmacyDto } from 'src/pharmacy/dto/create-pharmacy.dto';
 import { CreateAdminDto } from 'src/admin/dto/create-admin.dto';
@@ -23,7 +27,10 @@ import {
   FileFieldsInterceptor,
   NoFilesInterceptor,
 } from '@nestjs/platform-express/multer';
-import { UploadService } from 'src/upload/upload.service';
+import { UploadService } from 'src/upload/upload.service'; 
+import { RefreshJwtAuthGuard } from './guards/resresh-jwt-auth.guard';
+import { Admin } from 'src/admin/entities/admin.entity';
+ 
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -39,10 +46,11 @@ export class AuthController {
     return await this.authService.login(req.user, loginDto.userType);
   }
 
-  @Post('register/admin') 
+ 
+  @Post('register/admin')
+  @UseInterceptors(NoFilesInterceptor())
   async registerAdmin(@Body() createUserDto: CreateAdminDto) {
-    console.log(createUserDto.userName, createUserDto.email);
-
+ 
     return await this.authService.register(createUserDto, UserType.ADMIN);
   }
 
@@ -118,10 +126,10 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refresh(
-    @Request() req,
-    @Body('userType', UserTypeValidationPipe) userType: UserType,
-  ) {
-    return await this.authService.refreshToken(req.user, userType);
+ 
+  @UseGuards(RefreshJwtAuthGuard)
+  async refresh(@Request() req): Promise<{ accessToken: string }> {
+    return await this.authService.refreshToken(req.user);
+ 
   }
 }

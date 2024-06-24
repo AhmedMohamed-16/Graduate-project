@@ -4,17 +4,12 @@ import { UpdateStoreDto } from './dto/update-store.dto';
 import { Store } from './entities/store.entity';
 import { Between, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  startOfDay,
-  endOfDay,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  startOfYear,
-  endOfYear,
-} from 'date-fns';
-import e from 'express';
+ 
+
+import { AllowedPeriods } from 'src/common/enums/user-type.enum';
+import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
+import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
+ 
 
 @Injectable()
 export class StoreService {
@@ -58,43 +53,71 @@ export class StoreService {
 
   remove(id: number) {
     return `This action removes a #${id} store`;
-
+ 
   }
-  async getTotalStoreCount(period: string): Promise<number> {
-    let periodStart: Date, periodEnd: Date;
 
-    switch (period) {
-      case 'd':
-        periodStart = startOfDay(new Date());
-        periodEnd = endOfDay(new Date());
-        break;
-      case 'w':
-        periodStart = startOfWeek(new Date(), { weekStartsOn: 6 }); // 6 > SutarDay
-        periodEnd = endOfWeek(new Date(), { weekStartsOn: 6 });
-        break;
-      case 'm':
-        periodStart = startOfMonth(new Date());
-        periodEnd = endOfMonth(new Date());
-        break;
-      case 'y':
-        periodStart = startOfYear(new Date());
-        periodEnd = endOfYear(new Date());
-        break;
-      default:
-        return await this.storeRepo.count();
+  /**
+   * Calculates the total count of "stores" based on the specified period.
+   * @param period - The allowed period (either "all-time", "day", "week", "month", or "year").
+   * @returns An object containing the current count of stores and the percentage change from the previous period.
+   */
+  async getTotalStoresCount(
+    period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    if (period === AllowedPeriods.ALLTIME) {
+      const totalCount = await this.storeRepo.count();
+      return { count: totalCount, percentageChange: 0 };
     }
+
+    // Calculate the start and end dates for the current and previous periods
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = CalculationsHelper.calculateDateRanges(period);
 
     try {
-      const storeCount = await this.storeRepo.count({
-        where: {
-          createdAt: Between(periodStart, periodEnd),
-        },
-      });
-      return storeCount;
+      const [currentCount, previousCount] = await Promise.all([
+        this.storeRepo.count({
+          where: { createdAt: Between(currentStartDate, currentEndDate) },
+        }),
+        this.storeRepo.count({
+          where: { createdAt: Between(previousStartDate, previousEndDate) },
+        }),
+      ]);
+
+      // Calculate the percentage change between the current and previous counts
+      const percentageChange: number =
+        CalculationsHelper.calculatePercentageChange(
+          currentCount,
+          previousCount,
+        );
+      return { count: currentCount, percentageChange };
     } catch (error) {
       console.error('An error occurred while counting the stores:', error);
-      throw new Error('An error occurred while counting the stores.');
     }
   }
-} 
 
+  /**
+   * Retrieves either the top 5 or bottom 5 stores based on @param isTop.
+   * @param isTop - Determines whether to retrieve top stores (true) or bottom stores (false).
+   */
+  // async getTopOrBottomStores(isTop: IsBooleanPipes): Promise<Store[]> {
+  //   const order = isTop ? 'DESC' : 'ASC';
+
+  //   const topStores = await this.storeRepo
+  //     .createQueryBuilder('store')
+  //     .leftJoinAndSelect('store.productInventories', 'productInventory')
+  //     .leftJoinAndSelect('productInventory.OrderItemDetail', 'orderItem')
+  //     .select('store.id', 'storeId')
+  //     .addSelect('store.storeName', 'storeName')
+  //     .addSelect('SUM(orderItem.price)', 'price')
+  //     .groupBy('store.id')
+  //     .orderBy('Price', order)
+  //     .limit(5)
+  //     .getRawMany();
+
+  //   return topStores;
+  // }
+} 
