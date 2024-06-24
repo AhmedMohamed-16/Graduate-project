@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+ 
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
@@ -12,15 +13,16 @@ import { CategoryService } from 'src/category/category.service';
 import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
 import { join } from 'path';
 import * as fs from 'fs/promises'; 
-import { ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config'; 
 @Injectable()
 export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
     private readonly catService: CategoryService,
+ 
     private readonly configService: ConfigService,
-
+ 
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
@@ -52,6 +54,7 @@ export class ProductService {
   }
 
   async findAll(): Promise<Product[]> {
+ 
     const existingProducts = await this.productRepo
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category')
@@ -85,7 +88,7 @@ export class ProductService {
         ...product,
         image: `${this.configService.get('BASE_URL')}/${product.image}`,
       }));
-    
+     
   }
 
   async findOne(id: number): Promise<Product> {
@@ -121,6 +124,7 @@ export class ProductService {
 
     return !!existingProduct;
   }
+ 
   /**
    * Retrieve either the top 5 or bottom 5 products upon more demand based on @param isTop.
    * @param isTop - Determines whether to retrieve top products (true) or bottom products (false).
@@ -144,5 +148,5 @@ export class ProductService {
   //     .getRawMany();
 
   //   return topProducts;
-  // }
+  // } 
 }

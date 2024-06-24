@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+ 
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -6,6 +7,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
+ 
 import { AdminModule } from './admin/admin.module';
 import { StoreModule } from './store/store.module';
 import { PharmacyModule } from './pharmacy/pharmacy.module';
@@ -15,13 +17,18 @@ import { UploadModule } from './upload/upload.module';
 import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
 import { ProductInventoryModule } from './product-inventory/product-inventory.module';
+ 
+import { OrderModule } from './order/order.module';
+
+ 
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
+import { join } from 'path'; 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+ 
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => [
@@ -36,7 +43,7 @@ import { join } from 'path';
       rootPath: join(__dirname, '..', 'dist/upload/uploads'),
       serveRoot: '/uploads',
     }),
-
+ 
     DatabaseModule,
     AdminModule,
     StoreModule,
@@ -46,8 +53,10 @@ import { join } from 'path';
     UploadModule,
     CategoryModule,
     ProductModule,
-    ProductInventoryModule,
+    ProductInventoryModule, 
+    OrderModule,
   ],
+  
   controllers: [AppController],
   providers: [
     AppService,
@@ -55,6 +64,6 @@ import { join } from 'path';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-  ],
+  ], 
 })
 export class AppModule {}

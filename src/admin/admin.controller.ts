@@ -27,8 +27,9 @@ export class AdminController {
     return this.adminService.create(createAdminDto);
   }
   @Get()
+  
   @UseGuards(JwtAuthGaurd, RoleGuard)
-  @Roles(UserType.ADMIN)
+  @Roles(UserType.ADMIN) 
   findAll() {
     return this.adminService.findAll();
   }

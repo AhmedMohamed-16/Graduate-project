@@ -14,5 +14,8 @@ import { StoreModule } from 'src/store/store.module';
   ],
   controllers: [ProductInventoryController],
   providers: [ProductInventoryService],
+ 
+  exports: [ProductInventoryService],
+ 
 })
 export class ProductInventoryModule {}

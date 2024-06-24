@@ -6,9 +6,10 @@
 # .env
 *.env
 
+ 
 #docker
 *.yaml
-
+ 
 # Logs
 logs
 *.log

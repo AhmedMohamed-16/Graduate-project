@@ -48,6 +48,7 @@ export class CategoryService {
     const category = await this.catRepo.findOne({
       where: { name: catName.toUpperCase() },
     });
+ 
     return;
   }
 
@@ -56,7 +57,7 @@ export class CategoryService {
 
      await this.catRepo.update(id, updateCategoryDto);
 
-     return updatedCategory;
+     return updatedCategory; 
   }
 
   async remove(id: number): Promise<void> {

@@ -3,10 +3,16 @@ import {
   Column,
   Entity,
   ManyToOne,
+ 
+  OneToMany,
+ 
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Pharmacist } from '../../pharmacist/entities/pharmacist.entity';
+ 
+import { Order } from 'src/order/entities/order.entity';
+ 
 
 @Entity()
 export class Pharmacy {
@@ -65,7 +71,12 @@ export class Pharmacy {
   })
   pharmacist: Pharmacist;
 
-  // Hooks and Lifecycle Methods
+ 
+
+  ////////////////////////////////new order
+  @OneToMany(() => Order, (order:Order) => order.pharmacy, {
+  })
+  order: Order[];
   @BeforeInsert()
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
