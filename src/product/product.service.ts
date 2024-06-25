@@ -129,24 +129,25 @@ export class ProductService {
    * Retrieve either the top 5 or bottom 5 products upon more demand based on @param isTop.
    * @param isTop - Determines whether to retrieve top products (true) or bottom products (false).
    */
-  // async getTopOrBottomProductsByDemand(isTop:IsBooleanPipes): Promise<Product[]> {
-  //   const order = isTop ? 'DESC' : 'ASC';
+  async getTopOrBottomProductsByDemand(isTop:IsBooleanPipes): Promise<Product[]> {
+    const order = isTop ? 'DESC' : 'ASC';
 
-  //   const topProducts = await this.productRepo
-  //     .createQueryBuilder('product')
-  //     .leftJoinAndSelect('product.productInventories', 'productInventory')
-  //     .leftJoinAndSelect('productInventory.OrderItemDetail', 'orderItem')
-  //     .leftJoinAndSelect('orderItem.orders', 'order')
-  //     .select('product.id', 'productId')
-  //     .addSelect('product.name', 'productName')
-  //     .addSelect('SUM(orderItem.quantity)', 'quantity')
-  //     .addSelect('SUM(orderItem.price)', 'totalSales')
-  //     .addSelect('COUNT(DISTINCT order.id)', 'orderCount')
-  //     .groupBy('product.id')
-  //     .orderBy('quantity', order)
-  //     .limit(5)
-  //     .getRawMany();
+    const topProducts = await this.productRepo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.productInventories', 'productInventory')
+      .leftJoinAndSelect('productInventory.orderDetail', 'orderItem')
+      .leftJoinAndSelect('orderItem.order', 'order')
+      .select('product.id', 'productId')
+      .addSelect('product.name', 'productName')
+      .addSelect('SUM(orderItem.quantity)', 'quantity')
+      .addSelect('SUM(orderItem.price)', 'totalSales')
+      .addSelect('COUNT(DISTINCT order.id)', 'orderCount')
+      .groupBy('product.id')
+      .having('SUM(orderItem.quantity) > 0') // Ensure only products with orders are returned
+      .orderBy('quantity', order)
+      .limit(5)
+      .getRawMany();
 
-  //   return topProducts;
-  // } 
+    return topProducts;
+  } 
 }

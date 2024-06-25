@@ -68,10 +68,10 @@ export class ProductController {
   }
  
 
-  // @Get('/top-products/:isTop')
-  // async getTopFiveProducts(
-  //   @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
-  // ) {
-  //   return await this.productService.getTopOrBottomProductsByDemand(isTop);
-  // } 
+  @Get('/top-products/:isTop')
+  async getTopFiveProducts(
+    @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
+  ) {
+    return await this.productService.getTopOrBottomProductsByDemand(isTop);
+  } 
 }
