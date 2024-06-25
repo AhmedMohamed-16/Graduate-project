@@ -71,11 +71,6 @@ export class CreatePharmacyDto {
   @IsString()
   password: string;
 
-  // Status and Configuration
-  @ApiProperty()
-  @IsBoolean()
-  isActive: Boolean;
-
   // Related Entities
   @ApiProperty()
   @ValidateNested()
