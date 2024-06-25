@@ -13,7 +13,7 @@ import {
 import { CreatePharmacistDto } from '../../pharmacist/dto/create-pharmacist.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreatePharmacyDto {
+export class CreatePharmacyDto { 
   // Pharmacy Information
   @ApiProperty()
   @IsString()
