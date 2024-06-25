@@ -1,6 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+ 
+import { OrderDetail } from 'src/order/entities/order-details.entity';
+ 
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn ,OneToMany} from 'typeorm';
 import { Product } from 'src/product/entities/product.entity';
 import { Store } from 'src/store/entities/store.entity';
+ 
 
 @Entity()
 export class ProductInventory {
@@ -13,6 +17,7 @@ export class ProductInventory {
   @Column({ nullable: false })
   offerPercent: number;
 
+ 
   @Column({ nullable: false, type: 'decimal', precision: 10, scale: 2 })
   priceAfterOffer: number;
 
@@ -34,4 +39,8 @@ export class ProductInventory {
     cascade: true,
   })
   store: Store;
+ 
+  @OneToMany(() =>OrderDetail, (orderDetail:OrderDetail) => orderDetail.productInventory )
+  orderDetail:OrderDetail[];
+ 
 }

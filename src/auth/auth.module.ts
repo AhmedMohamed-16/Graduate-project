@@ -8,11 +8,15 @@ import { PharmacyModule } from 'src/pharmacy/pharmacy.module';
 import { StoreModule } from 'src/store/store.module';
 import { ConfigService } from '@nestjs/config';
 import { PharmacistModule } from 'src/pharmacist/pharmacist.module';
+
+import { UserTypeValidationPipe } from 'src/common/pipes/user-type-validation.pipe';
 import { UploadModule } from 'src/upload/upload.module';
+
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt-stategy.strategy';
 import { Reflector } from '@nestjs/core';
 import { RefreshJwtStrategy } from './strategies/refresh-jwt-stategy.strategy';
+
 
 @Module({
   imports: [
@@ -21,16 +25,19 @@ import { RefreshJwtStrategy } from './strategies/refresh-jwt-stategy.strategy';
     PharmacistModule,
     StoreModule,
     UploadModule,
-    PassportModule,
+ 
+    PassportModule, 
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
+
         signOptions: { expiresIn: configService.get('JWT_EXPIRATION_TIME') },
       }),
     }),
   ],
   providers: [AuthService, JwtStrategy, Reflector, RefreshJwtStrategy],
+
   controllers: [AuthController],
 })
 export class AuthModule {}

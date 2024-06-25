@@ -1,8 +1,9 @@
+ 
 import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-} from '@nestjs/common';
+} from '@nestjs/common'; 
 import { CreateProductInventoryDto } from './dto/create-product-inventory.dto';
 import { UpdateProductInventoryDto } from './dto/update-product-inventory.dto';
 import { Repository } from 'typeorm';
@@ -11,9 +12,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { StoreService } from 'src/store/store.service';
 import { ProductService } from 'src/product/product.service';
 
+ 
 import { AllowedPeriods } from 'src/common/enums/user-type.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
-
+ 
 @Injectable()
 export class ProductInventoryService {
   constructor(
@@ -36,24 +38,28 @@ export class ProductInventoryService {
 
     const newProductInventory = this.productInventoryRepo.create({
       ...createProductInventoryDto,
+ 
       priceAfterOffer: parseFloat(
         (
           product.publicPrice *
           (1 - createProductInventoryDto.offerPercent / 100)
         ).toFixed(2),
-      ),
+      ), 
       createdAt: new Date(),
       product: product,
       store: store,
     });
 
+ 
+    await this.productInventoryRepo.save(newProductInventory);
+ 
     try {
       await this.productInventoryRepo.save(newProductInventory);
     } catch (error) {
       throw new InternalServerErrorException(
         'Failed to create ProductInventory',
       );
-    }
+    } 
 
     return newProductInventory;
   }
@@ -74,15 +80,36 @@ export class ProductInventoryService {
     }
     return existingProductInventory;
   }
+ 
+  async update(id: number, updateProductInventoryDto: UpdateProductInventoryDto) {
+    const productInventory = await this.productInventoryRepo.preload({
+      id,
+      ...updateProductInventoryDto,
+    });
 
-  update(id: number, updateProductInventoryDto: UpdateProductInventoryDto) {
-    return `This action updates a #${id} productInventory`;
-  }
+    if (!productInventory) {
+      throw new NotFoundException(`There is no order under id ${id}`);
+    }
+
+    return this.productInventoryRepo.save(productInventory);
+    } 
 
   remove(id: number) {
     return `This action removes a #${id} productInventory`;
   }
 
+ 
+  
+ async findALLByIDS(ids:Array<number>):Promise<ProductInventory[]>{
+  const products = await this.productInventoryRepo.createQueryBuilder()
+  .where('id IN(:...ids)', { ids })
+  .getMany();
+
+  
+  return products;
+ }
+
+ 
   /**
    * Calculates the total count of "ActiveProducts" based on the specified period.
    * @param period - The allowed period (either "all-time", "day", "week", "month", or "year").
@@ -166,5 +193,5 @@ export class ProductInventoryService {
 
     const result = await queryBuilder.getRawOne();
     return result.productsCount;
-  }
+  } 
 }

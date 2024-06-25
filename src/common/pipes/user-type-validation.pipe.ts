@@ -1,3 +1,4 @@
+ 
 import {
   ArgumentMetadata,
   BadRequestException,
@@ -31,6 +32,6 @@ export class IsBooleanPipes implements PipeTransform {
       return parsedValue === 'true';
     } else {
       throw new BadRequestException('Invalid boolean value');
-    }
+    } 
   }
 }

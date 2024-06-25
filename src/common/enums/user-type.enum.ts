@@ -1,8 +1,11 @@
 export enum UserType {
   ADMIN = 'admin',
   PHARMACY = 'pharmacy',
-  STORE = 'store',
-}
+ 
+  STORE = 'store'
+} 
+ 
+   
 
 export enum AllowedPeriods {
   DAY = 'day',
@@ -10,4 +13,4 @@ export enum AllowedPeriods {
   MONTH = 'month',
   YEAR = 'year',
   ALLTIME = 'all',
-}
+} 

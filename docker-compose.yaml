@@ -3,6 +3,7 @@ version: '3.9'
 services:
   postgres:
     image: postgres:14
+
     container_name: pharmaStore_pg_db
     restart: always
     environment:
@@ -16,6 +17,7 @@ services:
 
   adminer:
     image: adminer
+
     container_name: pharmaStore_pg_db_admin
     restart: always
     ports:

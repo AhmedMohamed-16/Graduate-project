@@ -3,16 +3,14 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-
+ 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
     cors: true,
     bodyParser: true,
   });
-
   // app.setGlobalPrefix('api/v1');
-
   app.enableCors(); 
 
   const configService: ConfigService = app.get(ConfigService);
@@ -34,6 +32,7 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+ 
   await app.listen(port);
 }
 bootstrap();

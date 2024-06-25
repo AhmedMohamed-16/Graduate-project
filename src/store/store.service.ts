@@ -4,10 +4,12 @@ import { UpdateStoreDto } from './dto/update-store.dto';
 import { Store } from './entities/store.entity';
 import { Between, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+ 
 
 import { AllowedPeriods } from 'src/common/enums/user-type.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
 import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
+ 
 
 @Injectable()
 export class StoreService {
@@ -51,6 +53,7 @@ export class StoreService {
 
   remove(id: number) {
     return `This action removes a #${id} store`;
+ 
   }
 
   /**
@@ -117,4 +120,4 @@ export class StoreService {
 
   //   return topStores;
   // }
-}
+} 
