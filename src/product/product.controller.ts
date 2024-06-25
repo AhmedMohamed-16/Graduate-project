@@ -52,9 +52,14 @@ export class ProductController {
     return await this.productService.findAll();
   }
 
-  @Get(':id')
+  @Get('id/:id')
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<Product> {
-    return await this.productService.findOne(+id);
+    return await this.productService.findById(+id);
+  }
+
+  @Get('name/:name')
+  async findByName(@Param('name') name: string): Promise<Product> {
+    return await this.productService.findByName(name);
   }
 
   @Patch(':id')

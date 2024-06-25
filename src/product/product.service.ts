@@ -12,8 +12,9 @@ import { Product } from './entities/product.entity';
 import { CategoryService } from 'src/category/category.service';
 import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
 import { join } from 'path';
-import * as fs from 'fs/promises'; 
-import { ConfigService } from '@nestjs/config'; 
+import * as fs from 'fs/promises';
+import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class ProductService {
   constructor(
@@ -22,7 +23,7 @@ export class ProductService {
     private readonly catService: CategoryService,
  
     private readonly configService: ConfigService,
- 
+
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
@@ -68,6 +69,7 @@ export class ProductService {
         'category.name',
       ])
       .getMany();
+
       if (!existingProducts) throw new NotFoundException('No products found');
 
       // const productsWithImages = await Promise.all(
@@ -91,7 +93,7 @@ export class ProductService {
      
   }
 
-  async findOne(id: number): Promise<Product> {
+  async findById(id: number): Promise<Product> {
     const existingProduct = await this.productRepo.findOneBy({ id });
 
     if (!existingProduct)
@@ -99,8 +101,31 @@ export class ProductService {
     else return existingProduct;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async findByName(name: string): Promise<Product> {
+    const existingProduct = await this.productRepo.findOneBy({ name });
+
+    if (!existingProduct)
+      throw new NotFoundException(`Product with Name ${name} not found`);
+    else return existingProduct;
+  }
+
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    let product = await this.findById(id);
+
+    if (product) {
+      // Update the product instance with the new values
+      product = {
+        ...product,
+        ...updateProductDto,
+      };
+
+      // Save the updated product back to the database
+      await this.productRepo.save(product);
+
+      return product;
+    }
+
+    return product;
   }
 
   async remove(id: number): Promise<void> {
