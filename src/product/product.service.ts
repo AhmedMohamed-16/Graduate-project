@@ -36,8 +36,6 @@ export class ProductService {
     }
     const newProduct: Product = this.productRepo.create({
       ...createProductDto,
-      createdAt: new Date(),
-
       name: createProductDto.name.toUpperCase(),
       category: category, // Set the category of the new product
 

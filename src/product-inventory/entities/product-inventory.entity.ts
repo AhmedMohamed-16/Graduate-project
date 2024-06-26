@@ -1,7 +1,7 @@
  
 import { OrderDetail } from 'src/order/entities/order-details.entity';
  
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn ,OneToMany} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn ,OneToMany, CreateDateColumn, UpdateDateColumn} from 'typeorm';
 import { Product } from 'src/product/entities/product.entity';
 import { Store } from 'src/store/entities/store.entity';
  
@@ -21,12 +21,18 @@ export class ProductInventory {
   @Column({ nullable: false, type: 'decimal', precision: 10, scale: 2 })
   priceAfterOffer: number;
 
-  @Column({ nullable: true })
+  @CreateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+  })
   createdAt: Date;
 
-  @Column({ nullable: true })
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  }) 
   modifiedAt: Date;
-
   //price after offer
 
   // Relationships

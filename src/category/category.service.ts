@@ -25,7 +25,7 @@ export class CategoryService {
       const category = this.catRepo.create({
         ...createCategoryDto,
         name: createCategoryDto.name.toUpperCase(),
-        createdAt: new Date(),
+       
       });
       return await this.catRepo.save(category);
     }

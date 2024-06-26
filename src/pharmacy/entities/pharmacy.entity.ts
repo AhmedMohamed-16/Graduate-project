@@ -1,12 +1,14 @@
 import {
   BeforeInsert,
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
  
   OneToMany,
  
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Pharmacist } from '../../pharmacist/entities/pharmacist.entity';
@@ -59,10 +61,17 @@ export class Pharmacy {
   @Column({ nullable: false, default: false })
   isActive: Boolean;
 
-  @Column({ nullable: true })
+  @CreateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+  })
   createdAt: Date;
 
-  @Column({ nullable: true })
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  }) 
   modifiedAt: Date;
 
   // Relationships
