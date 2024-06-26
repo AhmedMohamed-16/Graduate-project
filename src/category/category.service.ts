@@ -33,31 +33,51 @@ export class CategoryService {
   }
 
   async findAll(): Promise<Category[]> {
-    return await this.catRepo.find();
+    const category = await this.catRepo
+      .createQueryBuilder('category')
+      .select(['category.id', 'category.name', 'category.description'])
+      .getMany();
+
+    return category;
   }
 
   async findById(id: number): Promise<Category> {
-    const category = await this.catRepo.findOneBy({ id });
+    const category = await this.catRepo
+      .createQueryBuilder('category')
+      .select(['category.id', 'category.name', 'category.description'])
+      .where('category.id = :id', { id })
+      .getRawOne();
+
     if (!category) {
       throw new NotFoundException(`Category with id ${id} not found`);
     }
     return category;
   }
 
-  async findByName(catName: string): Promise<Category> {
-    const category = await this.catRepo.findOne({
-      where: { name: catName.toUpperCase() },
-    });
- 
-    return;
+  async findByName(name: string): Promise<Category> {
+    const categoryName = name.toUpperCase();
+    const category = await this.catRepo
+      .createQueryBuilder('category')
+      .select(['category.id', 'category.name', 'category.description'])
+      .where('category.name = :name', { name: categoryName })
+      .getRawOne();
+
+    if (!category) {
+      throw new NotFoundException(`Category with name ${name} not found`);
+    }
+
+    return category;
   }
 
-  async update(id: number, updateCategoryDto: UpdateCategoryDto):Promise<Category> {  
-    const updatedCategory = await this.findById( id );
+  async update(
+    id: number,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<Category> {
+    const updatedCategory = await this.findById(id);
 
-     await this.catRepo.update(id, updateCategoryDto);
+    await this.catRepo.update(id, updateCategoryDto);
 
-     return updatedCategory; 
+    return updatedCategory;
   }
 
   async remove(id: number): Promise<void> {
