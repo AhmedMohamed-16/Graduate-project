@@ -1,9 +1,11 @@
 import {
   BeforeInsert,
   Column,
+  CreateDateColumn,
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { ProductInventory } from 'src/product-inventory/entities/product-inventory.entity';
@@ -55,11 +57,19 @@ export class Store {
   @Column({ nullable: false, default: false })
   isActive: Boolean;
 
-  @Column({ nullable: true })
+  @CreateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+  })
   createdAt: Date;
 
-  @Column({ nullable: true })
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  }) 
   modifiedAt: Date;
+
 
   // Hooks and Lifecycle Methods
   @BeforeInsert()

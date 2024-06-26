@@ -29,7 +29,7 @@ export class PharmacyService {
 
     const newPharmacy = this.pharmacyRepo.create({
       ...createPharmacyDto,
-      createdAt: new Date(),
+      
       pharmacist,
     });
 

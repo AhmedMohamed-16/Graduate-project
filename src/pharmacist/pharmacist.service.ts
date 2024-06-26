@@ -29,7 +29,7 @@ export class PharmacistService {
       // If pharmacist does not exist, create a new one
       pharmacist = this.pharmacistRepo.create({
         ...createPharmacistDto,
-        createdAt: new Date(),
+     
       });
     }
 

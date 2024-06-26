@@ -33,6 +33,9 @@ async function bootstrap() {
     }),
   );
  
+  //const httpAdapter = app.get(HttpAdapterHost);
+  //app.useGlobalFilters(new FilterFilter(httpAdapter));
+ 
   await app.listen(port);
 }
 bootstrap();

@@ -6,7 +6,7 @@ import { Between, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
  
 
-import { AllowedPeriods } from 'src/common/enums/user-type.enum';
+import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
 import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
  
@@ -25,8 +25,7 @@ export class StoreService {
     }
 
     const newStore = this.storeRepo.create({
-      ...createStoreDto,
-      createdAt: new Date(),
+      ...createStoreDto, 
     });
     return await this.storeRepo.save(newStore);
   }

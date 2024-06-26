@@ -13,7 +13,7 @@ import { StoreService } from 'src/store/store.service';
 import { ProductService } from 'src/product/product.service';
 
  
-import { AllowedPeriods } from 'src/common/enums/user-type.enum';
+import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';  
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
  
 @Injectable()

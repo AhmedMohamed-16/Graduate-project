@@ -1,10 +1,12 @@
 import { Category } from 'src/category/entities/category.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { ProductInventory } from 'src/product-inventory/entities/product-inventory.entity';
 
@@ -41,13 +43,18 @@ export class Product {
   @Column('text', { array: true, nullable: true })
   therapeuticClass: string[];
 
-  // Timestamps
-  @Column({ nullable: true })
+  @CreateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+  })
   createdAt: Date;
 
-  @Column({ nullable: true })
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
+  }) 
   modifiedAt: Date;
-
   // Relationships
 
   // Relationship with Category Entity

@@ -12,7 +12,7 @@ import {
   subWeeks,
   addDays,
 } from 'date-fns';
-import { AllowedPeriods } from '../enums/user-type.enum';
+import { AllowedPeriods } from '../enums/allowed-periods.enum';
 
 export class CalculationsHelper {
   /**
