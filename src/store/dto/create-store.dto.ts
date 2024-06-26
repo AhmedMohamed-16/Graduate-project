@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsBoolean,
   IsDefined,
   IsNotEmpty,
   IsNumber,
@@ -71,9 +70,4 @@ export class CreateStoreDto {
   @IsNotEmpty()
   @IsString()
   password: string;
-
-  // Status and Configuration
-  @ApiProperty()
-  @IsBoolean()
-  isActive: Boolean;
 }
