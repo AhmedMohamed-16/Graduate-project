@@ -2,9 +2,9 @@ import { StatusOrder } from "src/common/enums/status-order.enum";
 import { Pharmacy } from "src/pharmacy/entities/pharmacy.entity";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { OrderDetail } from "./order-details.entity";
-import { PaymentMethod } from "src/common/enums/payment-method.entity";
-@Entity()
-
+ 
+import { PaymentMethod } from "src/common/enums/payment-method.entity"; 
+@Entity() 
 export class Order {
 @PrimaryGeneratedColumn()
 id:number;
@@ -18,22 +18,31 @@ id:number;
    @Column({default:PaymentMethod.CASH})
    paymentMethod:PaymentMethod ; 
 
+ 
+   @CreateDateColumn({
+      type: 'timestamp',
+      default: () => 'CURRENT_TIMESTAMP(6)',
+    })
+  createAt:Date;
+  @UpdateDateColumn({
+   type: 'timestamp',
+   default: () => 'CURRENT_TIMESTAMP(6)',
+   onUpdate: 'CURRENT_TIMESTAMP(6)',
+ })
+  updateAt:Date;
 
-  @CreateDateColumn({nullable: true})
-  createDate:Date;
-  @UpdateDateColumn({nullable: true,  type: 'timestamp',})
-  updateDate:Date;
-  @DeleteDateColumn({nullable: true})
-  cancelDate:Date;
+  @DeleteDateColumn({nullable: true,  type: 'timestamp',
+  default: () => 'CURRENT_TIMESTAMP(6)',
+   onUpdate: 'CURRENT_TIMESTAMP(6)',})
+   cancelAt:Date;
 
-  @ManyToOne(() => Pharmacy, (pharmacy:Pharmacy) => pharmacy.order, {
+  @ManyToOne(() => Pharmacy, (pharmacy:Pharmacy) => pharmacy.order, { 
      cascade: true,
   })
   pharmacy:Pharmacy;
    
-  @OneToMany(() =>OrderDetail, (orderDetail:OrderDetail) => orderDetail. order,{  
-     cascade: true,
-})
-  orderDetail:OrderDetail[];
+ 
+  @OneToMany(() =>OrderDetail, (orderDetail:OrderDetail) => orderDetail. order)
+  ordersDetail:OrderDetail[]; 
 
 }

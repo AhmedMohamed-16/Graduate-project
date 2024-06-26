@@ -8,11 +8,12 @@ export class OrderDetail{
     @PrimaryGeneratedColumn()
     id: number;
   
-   @ManyToOne(() => Order, (order:Order) => order.orderDetail)
+ 
+   @ManyToOne(() => Order, (order:Order) => order.ordersDetail,{cascade: true})
    order:Order;
   
-   @JoinTable()
    @ManyToOne(() => ProductInventory, (productInventory:ProductInventory) => productInventory.orderDetail, {
+ 
       cascade: true,
    })
    productInventory:ProductInventory;
