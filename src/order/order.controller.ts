@@ -10,7 +10,7 @@ import { UserType } from 'src/common/enums/user-type.enum';
 import { JwtAuthGaurd } from 'src/auth/guards/jwt-auth.guard';
 
 
-@Controller('order')
+@Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService,
    ) {}
