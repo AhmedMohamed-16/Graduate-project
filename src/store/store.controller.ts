@@ -13,7 +13,7 @@ import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { ApiTags } from '@nestjs/swagger';
  
-import { AllowedPeriods } from 'src/common/enums/user-type.enum';
+import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { AllowedPeriodPipe, IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
 import { Store } from './entities/store.entity';
 

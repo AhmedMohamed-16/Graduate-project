@@ -1,6 +1,12 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Pharmacy } from '../../pharmacy/entities/pharmacy.entity';
-import { timestamp } from 'rxjs';
 
 @Entity()
 export class Pharmacist {
@@ -31,7 +37,7 @@ export class Pharmacist {
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
-  }) 
+  })
   modifiedAt: Date;
   // Relationships
   @OneToMany(() => Pharmacy, (pharmacy) => pharmacy.pharmacist)
