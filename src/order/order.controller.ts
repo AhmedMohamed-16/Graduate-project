@@ -8,6 +8,8 @@ import { RoleGuard } from 'src/auth/guards/role.guard';
 import { Roles } from 'src/common/decorators/authorize.decorator';
 import { UserType } from 'src/common/enums/user-type.enum';
 import { JwtAuthGaurd } from 'src/auth/guards/jwt-auth.guard';
+import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
+import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
 
 @Controller('order')
@@ -47,4 +49,12 @@ export class OrderController {
   remove(@Param('id') id: string) {
     return this.orderService.remove(+id);
   }
+  @Get('/total-count/:period')
+  async getTotalOrdersCount(
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.orderService.getTotalOrdersCount(period);
+ 
+  }
+
 }

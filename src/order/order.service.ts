@@ -3,7 +3,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
-import {   DataSource, Repository } from 'typeorm'; 
+import {   Between, DataSource, Repository } from 'typeorm'; 
 import { InjectRepository } from '@nestjs/typeorm'; 
 import { ProductInventoryService } from 'src/product-inventory/product-inventory.service';
 import { OrderDetail } from './entities/order-details.entity';
@@ -14,6 +14,8 @@ import { PaymentMethod } from 'src/common/enums/payment-method.entity';
 import { HttpAdapterHost } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express'; 
 import { ProductInventory } from 'src/product-inventory/entities/product-inventory.entity';
+import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
+import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
 @Injectable()
 export class OrderService {
   constructor(@InjectRepository(Order) private readonly orderRepository:Repository<Order>,
@@ -83,8 +85,8 @@ export class OrderService {
       // }  
   }
 
-  findAll() {
-    return this.orderRepository.find() ;
+ async findAll() {
+   return await this.orderRepository.find() ;
   }
 
   async findOne(id: number) {
@@ -103,4 +105,42 @@ export class OrderService {
   remove(id: number) {
     return `This action removes a #${id} order`;
   } 
+
+  async getTotalOrdersCount(
+    period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    if (period === AllowedPeriods.ALLTIME) {
+      const totalCount = await this.orderRepository.count({});
+      return { count: totalCount, percentageChange: 0 };
+    }
+
+    // Calculate the start and end dates for the current and previous periods
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = CalculationsHelper.calculateDateRanges(period);
+    try {
+      const [currentCount, previousCount] = await Promise.all([
+        this.orderRepository.count({
+          where: { createdAt: Between(currentStartDate, currentEndDate) },
+        }),
+        this.orderRepository.count({
+          where: { createdAt: Between(previousStartDate, previousEndDate) },
+        }),
+      ]);
+
+      // Calculate the percentage change between the current and previous counts
+      const percentageChange: number =
+        CalculationsHelper.calculatePercentageChange(
+          currentCount,
+          previousCount,
+        );
+      return { count: currentCount, percentageChange };
+    } catch (error) {
+      console.error('An error occurred while counting the orders:', error);
+    }
+  }
+  
 }
