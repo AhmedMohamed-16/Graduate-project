@@ -13,6 +13,7 @@ import { StatusOrder } from 'src/common/enums/status-order.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.entity'; 
 import { HttpAdapterHost } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express'; 
+import { ProductInventory } from 'src/product-inventory/entities/product-inventory.entity';
 @Injectable()
 export class OrderService {
   constructor(@InjectRepository(Order) private readonly orderRepository:Repository<Order>,
@@ -31,23 +32,26 @@ export class OrderService {
 
         let totalCost=0;
         let ordersDetails:OrderDetail[]=[];
-
-          const queryRunner = this.dataSource.createQueryRunner();
-          await queryRunner.connect();
-          await queryRunner.startTransaction();
-          try { 
+        let productInventory:ProductInventory[]=[];
+          // const queryRunner = this.dataSource.createQueryRunner();
+          // await queryRunner.connect();
+          // await queryRunner.startTransaction();
+          // try { 
          for (let i = 0; i < createOrderDto.ProductInventoryId.length; i++) {
-          const productInventory= await this.productInventoryService.findOne(createOrderDto.ProductInventoryId[i]);
+            productInventory[i]= await this.productInventoryService.findOne(createOrderDto.ProductInventoryId[i]);
   
-         if(productInventory.amount<createOrderDto.quantity[i]) {
-          throw new NotFoundException(`the amount for this productInventory ${productInventory.amount} must be greater than or equal from demand quantity`) ;
+         if(productInventory[i].amount<createOrderDto.quantity[i]) {
+          throw new NotFoundException(`the demand quantity is greater than from  the amount for this productInventory that is ${productInventory[i].amount}`) ;
          }
-         productInventory.amount-=createOrderDto.quantity[i];
 
-         await queryRunner.manager.save(productInventory); 
-        const price=productInventory.priceAfterOffer*createOrderDto.quantity[i];
-        const orderDetail =  this.orderDetailRepository.create({productInventory:productInventory,quantity:createOrderDto.quantity[i],price});
-        await queryRunner.manager.save(orderDetail);//await this.orderDetailRepository.save(orderDetail );
+        
+        //  await queryRunner.manager.save(productInventory); 
+
+        const price=productInventory[i].priceAfterOffer*createOrderDto.quantity[i];
+        const orderDetail =  this.orderDetailRepository.create({productInventory:productInventory[i],quantity:createOrderDto.quantity[i],price});
+        // await this.orderDetailRepository.save(orderDetail ); 
+     
+      //  await queryRunner.manager.save(orderDetail);
         ordersDetails.push(orderDetail);
         totalCost+=price;
         }
@@ -55,26 +59,28 @@ export class OrderService {
         const pharmacy=await this.pharmacyService.findOne(id);
 
      const order=   this.orderRepository.create({paymentMethod:PaymentMethod.CASH,statusOrder:StatusOrder.CONFIRM,totalCost,pharmacy});
-
-     await queryRunner.manager.save(order); 
-
+    //  await queryRunner.manager.save(order);
        for (let i = 0; i < ordersDetails.length; i++) {
          ordersDetails[i].order=order;  
-         await queryRunner.manager.save(ordersDetails[i]); 
+        //  await queryRunner.manager.save(ordersDetails[i]);
+        await this.orderDetailRepository.save(ordersDetails[i]);
+        productInventory[i].amount-=createOrderDto.quantity[i];
+        this.productInventoryService.save( productInventory[i]  );
        }
-       return order; 
+       return await this.orderRepository.save(order);
 
-      } catch (err) {
-        // since we have errors lets rollback the changes we made
-        await queryRunner.rollbackTransaction();
-        const { httpAdapter } = this.httpAdapterHost
-          httpAdapter.setHeader(res, 'X-Header', 'Foo')
-          httpAdapter.status(res, err.status)
-        return {message:err.message,status:err.status}
-      } finally {
-        // you need to release a queryRunner which was manually instantiated
-        await queryRunner.release();
-      }  
+      // } 
+    //  catch (err) {
+      //   // since we have errors lets rollback the changes we made
+      //   // await queryRunner.rollbackTransaction();
+      //   const { httpAdapter } = this.httpAdapterHost
+      //     httpAdapter.setHeader(res, 'X-Header', 'Foo')
+      //     httpAdapter.status(res, err.status)
+      //   return {message:err.message,status:err.status}
+      // } finally {
+      //   // you need to release a queryRunner which was manually instantiated
+      //   // await queryRunner.release();
+      // }  
   }
 
   findAll() {

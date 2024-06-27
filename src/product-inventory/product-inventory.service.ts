@@ -44,8 +44,7 @@ export class ProductInventoryService {
           product.publicPrice *
           (1 - createProductInventoryDto.offerPercent / 100)
         ).toFixed(2),
-      ), 
-      createdAt: new Date(),
+      ),  
       product: product,
       store: store,
     });
@@ -194,4 +193,8 @@ export class ProductInventoryService {
     const result = await queryBuilder.getRawOne();
     return result.productsCount;
   } 
+  save(productInventory: ProductInventory) {
+
+    this.productInventoryRepo.save(productInventory);
+  }
 }
