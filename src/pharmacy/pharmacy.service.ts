@@ -3,8 +3,10 @@ import { CreatePharmacyDto } from './dto/create-pharmacy.dto';
 import { UpdatePharmacyDto } from './dto/update-pharmacy.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pharmacy } from './entities/pharmacy.entity';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { PharmacistService } from 'src/pharmacist/pharmacist.service';
+import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
+import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
 
 @Injectable()
 export class PharmacyService {
@@ -36,8 +38,8 @@ export class PharmacyService {
     return await this.pharmacyRepo.save(newPharmacy);
   }
 
-  findAll() {
-    return `This action returns all pharmacy`;
+  async findAll() {
+    return  await this.pharmacyRepo.find();
   }
 
   findOne(id: number) { 
@@ -61,4 +63,43 @@ export class PharmacyService {
     
     return user ; 
 } 
+
+
+
+async getTotalPharmaciesCount(
+  period: AllowedPeriods,
+): Promise<{ count: number; percentageChange: number }> {
+  if (period === AllowedPeriods.ALLTIME) {
+    const totalCount = await this.pharmacyRepo.count({});
+    return { count: totalCount, percentageChange: 0 };
+  }
+
+  // Calculate the start and end dates for the current and previous periods
+  const {
+    currentStartDate,
+    currentEndDate,
+    previousStartDate,
+    previousEndDate,
+  } = CalculationsHelper.calculateDateRanges(period);
+  try {
+    const [currentCount, previousCount] = await Promise.all([
+      this.pharmacyRepo.count({
+        where: { createdAt: Between(currentStartDate, currentEndDate) },
+      }),
+      this.pharmacyRepo.count({
+        where: { createdAt: Between(previousStartDate, previousEndDate) },
+      }),
+    ]);
+
+    // Calculate the percentage change between the current and previous counts
+    const percentageChange: number =
+      CalculationsHelper.calculatePercentageChange(
+        currentCount,
+        previousCount,
+      );
+    return { count: currentCount, percentageChange };
+  } catch (error) {
+    console.error('An error occurred while counting the orders:', error);
+  }
+}
 }

@@ -44,15 +44,16 @@ export class PharmacyController {
     return this.pharmacyService.remove(+id);
   }
  
-  @Get('/total-count/:period')
-  async getTotalPharmaciesCount(
-    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
-  ): Promise<{ count: number; percentageChange: number }> {
-    return;
-  }
-
+   
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pharmacyService.findOne(+id);
   } 
+  @Get('/total-count/:period')
+  async getTotalPharmaciesCount(
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.pharmacyService.getTotalPharmaciesCount(period);
+ 
+  }
 }
