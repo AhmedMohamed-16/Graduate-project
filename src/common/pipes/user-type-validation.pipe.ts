@@ -4,8 +4,8 @@ import {
   BadRequestException,
   PipeTransform,
 } from '@nestjs/common';
-import { AllowedPeriods, UserType } from '../enums/user-type.enum';
-
+import {   UserType } from '../enums/user-type.enum';
+import { AllowedPeriods } from '../enums/allowed-periods.enum';
 export class UserTypeValidationPipe implements PipeTransform {
   transform(value: any, metadata: ArgumentMetadata) {
     if (!Object.values(UserType).includes(value)) {

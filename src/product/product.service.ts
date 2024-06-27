@@ -134,9 +134,9 @@ export class ProductService {
 
   async isExist(createProductDto: CreateProductDto): Promise<boolean> {
     const category = await this.catService.findById(
-      createProductDto.categoryID,
+      createProductDto.categoryID
     );
-
+ 
     const existingProduct = await this.productRepo.findOne({
       where: {
         name: createProductDto.name.toUpperCase(),
