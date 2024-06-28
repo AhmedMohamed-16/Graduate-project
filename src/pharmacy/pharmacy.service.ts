@@ -1,19 +1,23 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { CreatePharmacyDto } from './dto/create-pharmacy.dto';
 import { UpdatePharmacyDto } from './dto/update-pharmacy.dto';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectRepository ,} from '@nestjs/typeorm';
 import { Pharmacy } from './entities/pharmacy.entity';
-import { Between, Repository } from 'typeorm';
+import { Between, Repository ,In} from 'typeorm';
 import { PharmacistService } from 'src/pharmacist/pharmacist.service';
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
+ 
+
 
 @Injectable()
 export class PharmacyService {
   constructor(
     @InjectRepository(Pharmacy)
     private readonly pharmacyRepo: Repository<Pharmacy>,
-    private readonly pharmacistService: PharmacistService, // Inject the PharmacistService
+    private readonly pharmacistService: PharmacistService, 
+   
+    // Inject the PharmacistService
   ) {}
 
   async create(createPharmacyDto: CreatePharmacyDto): Promise<Pharmacy> {
@@ -44,6 +48,9 @@ export class PharmacyService {
 
   findOne(id: number) { 
     return this.pharmacyRepo.findOneBy({ id }) 
+  }
+  findMany(ids: number[]) {
+    return this.pharmacyRepo.findBy({ id: In(ids) });
   }
 
   async findByUserName(userName: string): Promise<Pharmacy | undefined> {
@@ -102,4 +109,8 @@ async getTotalPharmaciesCount(
     console.error('An error occurred while counting the orders:', error);
   }
 }
+
+// find pharmacies that are top buying
+
+
 }

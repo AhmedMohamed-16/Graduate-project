@@ -11,6 +11,7 @@ import { JwtAuthGaurd } from 'src/auth/guards/jwt-auth.guard';
 import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
+import{Pharmacy} from 'src/pharmacy/entities/pharmacy.entity';
 
 @Controller('order')
 export class OrderController {
@@ -54,6 +55,15 @@ export class OrderController {
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
     return await this.orderService.getTotalOrdersCount(period);
+ 
+  }
+
+ 
+  @Get('/top-buying-pharmacies/:num') //for pharmacies
+  async getTopBuyingPharmacies(
+    @Param('num', ParseIntPipe  ) num: number,
+  )  {
+    return await this.orderService.getTopBuyingPharmacies(num);
  
   }
 

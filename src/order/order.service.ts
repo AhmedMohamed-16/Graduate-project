@@ -1,5 +1,4 @@
- 
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
@@ -8,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ProductInventoryService } from 'src/product-inventory/product-inventory.service';
 import { OrderDetail } from './entities/order-details.entity';
 import { PharmacyService } from 'src/pharmacy/pharmacy.service';
- 
+import{Pharmacy} from 'src/pharmacy/entities/pharmacy.entity';
 import { StatusOrder } from 'src/common/enums/status-order.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.entity'; 
 import { HttpAdapterHost } from '@nestjs/core';
@@ -22,9 +21,7 @@ export class OrderService {
   @InjectRepository(OrderDetail) private readonly orderDetailRepository:Repository<OrderDetail>,
   private readonly productInventoryService:ProductInventoryService,
  
-  private readonly pharmacyService:PharmacyService,
-  private readonly dataSource:DataSource,
-  private readonly httpAdapterHost: HttpAdapterHost<ExpressAdapter>){}
+  private readonly pharmacyService:PharmacyService, ){}
 
   async create(id:number,res:Response,createOrderDto: CreateOrderDto) { 
     if(createOrderDto.ProductInventoryId.length != createOrderDto.quantity.length) {
@@ -142,5 +139,19 @@ export class OrderService {
       console.error('An error occurred while counting the orders:', error);
     }
   }
-  
+  async getTopBuyingPharmacies(limit: number) {
+    
+   
+   const result = await this.orderRepository.createQueryBuilder('order')
+  .select('order.pharmacyId')
+  .addSelect('SUM(order.totalCost)', 'total_cost')
+  .groupBy('order.pharmacyId')
+  .orderBy('total_cost', 'DESC')
+  .limit(limit)
+  .getRawMany();
+  const pharmaciesIDs = result.map((result) => result.pharmacyId);
+  const pharmacies = await this.pharmacyService.findMany(pharmaciesIDs);
+  return pharmacies;
+    
+ }
 }
