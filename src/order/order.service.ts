@@ -2,7 +2,7 @@
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
-import {   Between, DataSource, Repository } from 'typeorm'; 
+import {   Between, DataSource, Repository, SelectQueryBuilder } from 'typeorm'; 
 import { InjectRepository } from '@nestjs/typeorm'; 
 import { ProductInventoryService } from 'src/product-inventory/product-inventory.service';
 import { OrderDetail } from './entities/order-details.entity';
@@ -141,11 +141,17 @@ export class OrderService {
     }
   }
   
- async getTopOrders(){
+ async getTopOrders() {
   const result = await this.orderRepository.createQueryBuilder('order')
+  .leftJoin('order.ordersDetail','ordersDetail')
   .select('order.id')
-  .orderBy('order.totalCost', 'DESC')
+  .addSelect('SUM(ordersDetail.quantity)', 'itemsQuantity')
+  .addSelect('order.totalCost', 'totalPrice')
+  .groupBy('order.id')
+  .orderBy('COALESCE(order.totalCost,0)', 'DESC')
+  .addOrderBy('COALESCE(SUM(ordersDetail.quantity),0)', 'DESC') // Add this line to order by itemsQuantity as well
   .limit(5)
-
+  .getRawMany();
+return result;
  }
 }

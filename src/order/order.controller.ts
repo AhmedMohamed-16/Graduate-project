@@ -31,6 +31,19 @@ export class OrderController {
     return this.orderService.findAll();
   }
 
+
+  @Get('/top-orders') //for orders
+  async getTopOrders( )  {
+    return await this.orderService.getTopOrders();
+  }
+  @Get('/total-count/:period')
+  async getTotalOrdersCount(
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.orderService.getTotalOrdersCount(period);
+ 
+  }
+
   @Get(':id')
   findOneOrder(@Param('id',ParseIntPipe) id: number) {
     return this.orderService.findOne(id); 
@@ -50,20 +63,4 @@ export class OrderController {
   remove(@Param('id') id: string) {
     return this.orderService.remove(+id);
   }
-  @Get('/total-count/:period')
-  async getTotalOrdersCount(
-    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
-  ): Promise<{ count: number; percentageChange: number }> {
-    return await this.orderService.getTotalOrdersCount(period);
- 
-  }
-
- 
-  
-  @Get('/top-orders') //for orders
-  async getTopOrders( )  {
-    return await this.orderService.getTopOrders();
- 
-  }
-
 }
