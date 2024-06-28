@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
- 
+
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
@@ -21,21 +21,18 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
     private readonly catService: CategoryService,
- 
-    private readonly configService: ConfigService,
 
+    private readonly configService: ConfigService,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    const category = await this.catService.findById(
-      createProductDto.categoryID,
-    );
+    const category = await this.catService.findOne(createProductDto.categoryID);
 
     if (await this.isExist(createProductDto)) {
       throw new ConflictException('Product already exists');
     }
     const newProduct: Product = this.productRepo.create({
-      ...createProductDto,
+      ...createProductDto, 
       name: createProductDto.name.toUpperCase(),
       category: category, // Set the category of the new product
 
@@ -53,7 +50,6 @@ export class ProductService {
   }
 
   async findAll(): Promise<Product[]> {
- 
     const existingProducts = await this.productRepo
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category')
@@ -68,27 +64,26 @@ export class ProductService {
       ])
       .getMany();
 
-      if (!existingProducts) throw new NotFoundException('No products found');
+    if (!existingProducts) throw new NotFoundException('No products found');
 
-      // const productsWithImages = await Promise.all(
-      //   existingProducts.map(async (product) => {
-      //     const imagePath = join(process.cwd(), '', product.image);
-      //     const imageBuffer = await fs.readFile(imagePath);
-      //     const imageBase64 = imageBuffer.toString('base64');
-      //     return {
-      //       ...product,
-      //       image: imageBase64,
-      //     };
-      //   }),
-      // );
-  
-      // return productsWithImages;
-  
-      return existingProducts.map((product) => ({
-        ...product,
-        image: `${this.configService.get('BASE_URL')}/${product.image}`,
-      }));
-     
+    // const productsWithImages = await Promise.all(
+    //   existingProducts.map(async (product) => {
+    //     const imagePath = join(process.cwd(), '', product.image);
+    //     const imageBuffer = await fs.readFile(imagePath);
+    //     const imageBase64 = imageBuffer.toString('base64');
+    //     return {
+    //       ...product,
+    //       image: imageBase64,
+    //     };
+    //   }),
+    // );
+
+    // return productsWithImages;
+
+    return existingProducts.map((product) => ({
+      ...product,
+      image: `${this.configService.get('BASE_URL')}/${product.image}`,
+    }));
   }
 
   async findById(id: number): Promise<Product> {
@@ -133,9 +128,11 @@ export class ProductService {
   }
 
   async isExist(createProductDto: CreateProductDto): Promise<boolean> {
+ 
     const category = await this.catService.findById(
       createProductDto.categoryID
     );
+ 
  
     const existingProduct = await this.productRepo.findOne({
       where: {
@@ -152,7 +149,9 @@ export class ProductService {
    * Retrieve either the top 5 or bottom 5 products upon more demand based on @param isTop.
    * @param isTop - Determines whether to retrieve top products (true) or bottom products (false).
    */
-  async getTopOrBottomProductsByDemand(isTop:IsBooleanPipes): Promise<Product[]> {
+  async getTopOrBottomProductsByDemand(
+    isTop: IsBooleanPipes,
+  ): Promise<Product[]> {
     const order = isTop ? 'DESC' : 'ASC';
 
     const topProducts = await this.productRepo

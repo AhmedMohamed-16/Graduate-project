@@ -13,7 +13,7 @@ import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
 import{Pharmacy} from 'src/pharmacy/entities/pharmacy.entity';
 
-@Controller('order')
+@Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService,
    ) {}

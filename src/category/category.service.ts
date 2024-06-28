@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -25,7 +26,6 @@ export class CategoryService {
       const category = this.catRepo.create({
         ...createCategoryDto,
         name: createCategoryDto.name.toUpperCase(),
-       
       });
       return await this.catRepo.save(category);
     }
@@ -38,6 +38,15 @@ export class CategoryService {
       .select(['category.id', 'category.name', 'category.description'])
       .getMany();
 
+    return category;
+  }
+
+  async findOne(id: number): Promise<Category> {
+    const category = await this.catRepo.findOneBy({ id });
+
+    if (!category) {
+      throw new NotFoundException(`Category with id ${id} not found`);
+    }
     return category;
   }
 
