@@ -154,4 +154,22 @@ export class OrderService {
   .getRawMany();
 return result;
  }
+
+ async getLates(){
+  const result = await this.orderRepository.createQueryBuilder('order')
+  .leftJoin('order.pharmacy', 'pharmacy')
+  .leftJoin('order.ordersDetail', 'orderDetail')
+  .leftJoin('orderDetail.productInventory', 'productInventory')
+  .leftJoin('productInventory.store', 'store')
+  .select('order.id', 'id')
+  .addSelect('STRING_AGG(DISTINCT pharmacy.pharmacyName, REPEAT(\' \', 4))', 'To')
+  .addSelect('STRING_AGG(DISTINCT store.storeName, REPEAT(\' \', 4))', 'From')
+  .groupBy('order.id')
+  .orderBy('order.id', 'DESC')
+  .limit(5)
+  .getRawMany();
+  //tab space with CHR() is
+
+return result;
+ }
 }

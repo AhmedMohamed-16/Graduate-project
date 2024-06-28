@@ -31,6 +31,11 @@ export class OrderController {
     return this.orderService.findAll();
   }
 
+  @Get('/get-latest') //for orders
+  async getLates( )  {
+    return await this.orderService.getLates();
+  }
+
 
   @Get('/top-orders') //for orders
   async getTopOrders( )  {
