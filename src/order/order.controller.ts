@@ -8,7 +8,7 @@ import { RoleGuard } from 'src/auth/guards/role.guard';
 import { Roles } from 'src/common/decorators/authorize.decorator';
 import { UserType } from 'src/common/enums/user-type.enum';
 import { JwtAuthGaurd } from 'src/auth/guards/jwt-auth.guard';
-import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
+import { AllowedPeriodPipe, IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
 import{Pharmacy} from 'src/pharmacy/entities/pharmacy.entity';
@@ -59,11 +59,10 @@ export class OrderController {
   }
 
  
-  @Get('/top-buying-pharmacies/:num') //for pharmacies
-  async getTopBuyingPharmacies(
-    @Param('num', ParseIntPipe  ) num: number,
-  )  {
-    return await this.orderService.getTopBuyingPharmacies(num);
+  
+  @Get('/top-orders') //for orders
+  async getTopOrders( )  {
+    return await this.orderService.getTopOrders();
  
   }
 

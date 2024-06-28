@@ -15,6 +15,7 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import { ProductInventory } from 'src/product-inventory/entities/product-inventory.entity';
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
+import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
 @Injectable()
 export class OrderService {
   constructor(@InjectRepository(Order) private readonly orderRepository:Repository<Order>,
@@ -139,19 +140,12 @@ export class OrderService {
       console.error('An error occurred while counting the orders:', error);
     }
   }
-  async getTopBuyingPharmacies(limit: number) {
-    
-   
-   const result = await this.orderRepository.createQueryBuilder('order')
-  .select('order.pharmacyId')
-  .addSelect('SUM(order.totalCost)', 'total_cost')
-  .groupBy('order.pharmacyId')
-  .orderBy('total_cost', 'DESC')
-  .limit(limit)
-  .getRawMany();
-  const pharmaciesIDs = result.map((result) => result.pharmacyId);
-  const pharmacies = await this.pharmacyService.findMany(pharmaciesIDs);
-  return pharmacies;
-    
+  
+ async getTopOrders(){
+  const result = await this.orderRepository.createQueryBuilder('order')
+  .select('order.id')
+  .orderBy('order.totalCost', 'DESC')
+  .limit(5)
+
  }
 }

@@ -111,6 +111,26 @@ async getTotalPharmaciesCount(
 }
 
 // find pharmacies that are top buying
+async getTopBuyingPharmacies(isTop: boolean) {
+  const order = isTop ? 'DESC' : 'ASC';
+ 
+ const result = await this.pharmacyRepo.createQueryBuilder('pharmacy')
+ .leftJoinAndSelect('pharmacy.order','order')
+.select('pharmacy.id') 
+.addSelect('COALESCE(SUM(order.totalCost), 0)', 'total_revenue') // Use COALESCE to replace null with 0
+.addSelect('COALESCE(COUNT(order.id), 0)', 'TotalOrder') // Use COALESCE to replace null with 0
+.groupBy('pharmacy.id')
+.orderBy('total_revenue', order)
+.limit(5)
+.getRawMany();
+// const pharmaciesIDs = result.map((result) => result.pharmacyId);
+// const pharmacies = await this.pharmacyService.findMany(pharmaciesIDs);
+// const pharmaciess=pharmacies.map((pharmacy)=>{
+//   return {...pharmacy,TotalRevenue:result.find((result)=>result.pharmacyId===pharmacy.id).total_cost,TotalOrder:result.find((result)=>result.pharmacyId===pharmacy.id).TotalOrder}
+// });
+// return pharmaciess;
+  return result;
+}
 
 
 }
