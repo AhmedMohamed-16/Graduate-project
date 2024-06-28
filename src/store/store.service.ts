@@ -30,8 +30,8 @@ export class StoreService {
     return await this.storeRepo.save(newStore);
   }
 
-  findAll() {
-    return `This action returns all store`;
+ async findAll() {
+    return await this.storeRepo.find();
   }
 
   async findById(id: number) {
@@ -46,10 +46,20 @@ export class StoreService {
     return await this.storeRepo.findOne({ where: { userName: userName } });
   }
 
-  update(id: number, updateStoreDto: UpdateStoreDto) {
-    return `This action updates a #${id} store`;
-  }
+ async  update(id: number, updateStoreDto: UpdateStoreDto) {
+    let store = await this.findById(id);
 
+    if (store) {
+      // update the store instance with the new values
+      return await this.storeRepo.save({
+        ...store,
+        ...updateStoreDto,
+      });;
+    }
+
+    return store;
+  }
+ 
   remove(id: number) {
     return `This action removes a #${id} store`;
  

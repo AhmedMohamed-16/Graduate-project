@@ -1,27 +1,28 @@
- 
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
-import {   DataSource, Repository } from 'typeorm'; 
+import {   Between, DataSource, Repository, SelectQueryBuilder } from 'typeorm'; 
 import { InjectRepository } from '@nestjs/typeorm'; 
 import { ProductInventoryService } from 'src/product-inventory/product-inventory.service';
 import { OrderDetail } from './entities/order-details.entity';
 import { PharmacyService } from 'src/pharmacy/pharmacy.service';
- 
+import{Pharmacy} from 'src/pharmacy/entities/pharmacy.entity';
 import { StatusOrder } from 'src/common/enums/status-order.enum';
 import { PaymentMethod } from 'src/common/enums/payment-method.entity'; 
 import { HttpAdapterHost } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express'; 
+import { ProductInventory } from 'src/product-inventory/entities/product-inventory.entity';
+import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
+import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
+import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
 @Injectable()
 export class OrderService {
   constructor(@InjectRepository(Order) private readonly orderRepository:Repository<Order>,
   @InjectRepository(OrderDetail) private readonly orderDetailRepository:Repository<OrderDetail>,
   private readonly productInventoryService:ProductInventoryService,
  
-  private readonly pharmacyService:PharmacyService,
-  private readonly dataSource:DataSource,
-  private readonly httpAdapterHost: HttpAdapterHost<ExpressAdapter>){}
+  private readonly pharmacyService:PharmacyService, ){}
 
   async create(id:number,res:Response,createOrderDto: CreateOrderDto) { 
     if(createOrderDto.ProductInventoryId.length != createOrderDto.quantity.length) {
@@ -31,23 +32,26 @@ export class OrderService {
 
         let totalCost=0;
         let ordersDetails:OrderDetail[]=[];
-
-          const queryRunner = this.dataSource.createQueryRunner();
-          await queryRunner.connect();
-          await queryRunner.startTransaction();
-          try { 
+        let productInventory:ProductInventory[]=[];
+          // const queryRunner = this.dataSource.createQueryRunner();
+          // await queryRunner.connect();
+          // await queryRunner.startTransaction();
+          // try { 
          for (let i = 0; i < createOrderDto.ProductInventoryId.length; i++) {
-          const productInventory= await this.productInventoryService.findOne(createOrderDto.ProductInventoryId[i]);
+            productInventory[i]= await this.productInventoryService.findOne(createOrderDto.ProductInventoryId[i]);
   
-         if(productInventory.amount<createOrderDto.quantity[i]) {
-          throw new NotFoundException(`the amount for this productInventory ${productInventory.amount} must be greater than or equal from demand quantity`) ;
+         if(productInventory[i].amount<createOrderDto.quantity[i]) {
+          throw new NotFoundException(`the demand quantity is greater than from  the amount for this productInventory that is ${productInventory[i].amount}`) ;
          }
-         productInventory.amount-=createOrderDto.quantity[i];
 
-         await queryRunner.manager.save(productInventory); 
-        const price=productInventory.priceAfterOffer*createOrderDto.quantity[i];
-        const orderDetail =  this.orderDetailRepository.create({productInventory:productInventory,quantity:createOrderDto.quantity[i],price});
-        await queryRunner.manager.save(orderDetail);//await this.orderDetailRepository.save(orderDetail );
+        
+        //  await queryRunner.manager.save(productInventory); 
+
+        const price=productInventory[i].priceAfterOffer*createOrderDto.quantity[i];
+        const orderDetail =  this.orderDetailRepository.create({productInventory:productInventory[i],quantity:createOrderDto.quantity[i],price});
+        // await this.orderDetailRepository.save(orderDetail ); 
+     
+      //  await queryRunner.manager.save(orderDetail);
         ordersDetails.push(orderDetail);
         totalCost+=price;
         }
@@ -55,30 +59,32 @@ export class OrderService {
         const pharmacy=await this.pharmacyService.findOne(id);
 
      const order=   this.orderRepository.create({paymentMethod:PaymentMethod.CASH,statusOrder:StatusOrder.CONFIRM,totalCost,pharmacy});
-
-     await queryRunner.manager.save(order); 
-
+    //  await queryRunner.manager.save(order);
        for (let i = 0; i < ordersDetails.length; i++) {
          ordersDetails[i].order=order;  
-         await queryRunner.manager.save(ordersDetails[i]); 
+        //  await queryRunner.manager.save(ordersDetails[i]);
+        await this.orderDetailRepository.save(ordersDetails[i]);
+        productInventory[i].amount-=createOrderDto.quantity[i];
+        this.productInventoryService.save( productInventory[i]  );
        }
-       return order; 
+       return await this.orderRepository.save(order);
 
-      } catch (err) {
-        // since we have errors lets rollback the changes we made
-        await queryRunner.rollbackTransaction();
-        const { httpAdapter } = this.httpAdapterHost
-          httpAdapter.setHeader(res, 'X-Header', 'Foo')
-          httpAdapter.status(res, err.status)
-        return {message:err.message,status:err.status}
-      } finally {
-        // you need to release a queryRunner which was manually instantiated
-        await queryRunner.release();
-      }  
+      // } 
+    //  catch (err) {
+      //   // since we have errors lets rollback the changes we made
+      //   // await queryRunner.rollbackTransaction();
+      //   const { httpAdapter } = this.httpAdapterHost
+      //     httpAdapter.setHeader(res, 'X-Header', 'Foo')
+      //     httpAdapter.status(res, err.status)
+      //   return {message:err.message,status:err.status}
+      // } finally {
+      //   // you need to release a queryRunner which was manually instantiated
+      //   // await queryRunner.release();
+      // }  
   }
 
-  findAll() {
-    return this.orderRepository.find() ;
+ async findAll() {
+   return await this.orderRepository.find() ;
   }
 
   async findOne(id: number) {
@@ -97,4 +103,55 @@ export class OrderService {
   remove(id: number) {
     return `This action removes a #${id} order`;
   } 
+
+  async getTotalOrdersCount(
+    period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    if (period === AllowedPeriods.ALLTIME) {
+      const totalCount = await this.orderRepository.count({});
+      return { count: totalCount, percentageChange: 0 };
+    }
+
+    // Calculate the start and end dates for the current and previous periods
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = CalculationsHelper.calculateDateRanges(period);
+    try {
+      const [currentCount, previousCount] = await Promise.all([
+        this.orderRepository.count({
+          where: { createdAt: Between(currentStartDate, currentEndDate) },
+        }),
+        this.orderRepository.count({
+          where: { createdAt: Between(previousStartDate, previousEndDate) },
+        }),
+      ]);
+
+      // Calculate the percentage change between the current and previous counts
+      const percentageChange: number =
+        CalculationsHelper.calculatePercentageChange(
+          currentCount,
+          previousCount,
+        );
+      return { count: currentCount, percentageChange };
+    } catch (error) {
+      console.error('An error occurred while counting the orders:', error);
+    }
+  }
+  
+ async getTopOrders() {
+  const result = await this.orderRepository.createQueryBuilder('order')
+  .leftJoin('order.ordersDetail','ordersDetail')
+  .select('order.id')
+  .addSelect('SUM(ordersDetail.quantity)', 'itemsQuantity')
+  .addSelect('order.totalCost', 'totalPrice')
+  .groupBy('order.id')
+  .orderBy('COALESCE(order.totalCost,0)', 'DESC')
+  .addOrderBy('COALESCE(SUM(ordersDetail.quantity),0)', 'DESC') // Add this line to order by itemsQuantity as well
+  .limit(5)
+  .getRawMany();
+return result;
+ }
 }

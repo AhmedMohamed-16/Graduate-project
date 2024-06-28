@@ -32,7 +32,6 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
- 
   //const httpAdapter = app.get(HttpAdapterHost);
   //app.useGlobalFilters(new FilterFilter(httpAdapter));
  //commit

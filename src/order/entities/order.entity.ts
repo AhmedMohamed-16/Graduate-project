@@ -23,18 +23,13 @@ id:number;
       type: 'timestamp',
       default: () => 'CURRENT_TIMESTAMP(6)',
     })
-  createAt:Date;
+  createdAt:Date;
   @UpdateDateColumn({
    type: 'timestamp',
    default: () => 'CURRENT_TIMESTAMP(6)',
    onUpdate: 'CURRENT_TIMESTAMP(6)',
  })
-  updateAt:Date;
-
-  @DeleteDateColumn({nullable: true,  type: 'timestamp',
-  default: () => 'CURRENT_TIMESTAMP(6)',
-   onUpdate: 'CURRENT_TIMESTAMP(6)',})
-   cancelAt:Date;
+  updatedAt:Date;
 
   @ManyToOne(() => Pharmacy, (pharmacy:Pharmacy) => pharmacy.order, { 
      cascade: true,

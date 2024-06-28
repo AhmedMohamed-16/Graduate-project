@@ -8,7 +8,10 @@ import { RoleGuard } from 'src/auth/guards/role.guard';
 import { Roles } from 'src/common/decorators/authorize.decorator';
 import { UserType } from 'src/common/enums/user-type.enum';
 import { JwtAuthGaurd } from 'src/auth/guards/jwt-auth.guard';
+import { AllowedPeriodPipe, IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
+import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
+import{Pharmacy} from 'src/pharmacy/entities/pharmacy.entity';
 
 @Controller('orders')
 export class OrderController {
@@ -26,6 +29,19 @@ export class OrderController {
   @Get()
   findAllOrders() {
     return this.orderService.findAll();
+  }
+
+
+  @Get('/top-orders') //for orders
+  async getTopOrders( )  {
+    return await this.orderService.getTopOrders();
+  }
+  @Get('/total-count/:period')
+  async getTotalOrdersCount(
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.orderService.getTotalOrdersCount(period);
+ 
   }
 
   @Get(':id')

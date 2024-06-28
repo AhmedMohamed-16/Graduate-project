@@ -58,7 +58,7 @@ export class Product {
   // Relationships
 
   // Relationship with Category Entity
-  @ManyToOne(() => Category, (category) => category.products, {
+  @ManyToOne(() => Category, (category:Category) => category.products, {
  
     // cascade: true, 
   })

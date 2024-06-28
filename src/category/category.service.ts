@@ -51,16 +51,19 @@ export class CategoryService {
   }
 
   async findById(id: number): Promise<Category> {
-    const category = await this.catRepo
-      .createQueryBuilder('category')
-      .select(['category.id', 'category.name', 'category.description'])
-      .where('category.id = :id', { id })
-      .getRawOne();
+    // const category = await this.catRepo
+    //   .createQueryBuilder('category')
+    //   .select(['category.id', 'category.name', 'category.description'])
+    //   .where('category.id = :id', { id })
+    //   .getRawOne();
 
-    if (!category) {
-      throw new NotFoundException(`Category with id ${id} not found`);
-    }
-    return category;
+    // if (!category) {
+    //   throw new NotFoundException(`Category with id ${id} not found`);
+    // }
+    return await this.catRepo.findOne({
+      where: { id },
+    });
+
   }
 
   async findByName(name: string): Promise<Category> {

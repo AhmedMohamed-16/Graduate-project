@@ -28,6 +28,6 @@ export class Category {
 
 
   // Relationships
-  @OneToMany(() => Product, (product) => product.category)
+  @OneToMany(() => Product, (product:Product) => product.category)
   products: Product[];
 }
