@@ -1,9 +1,8 @@
- 
 import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-} from '@nestjs/common'; 
+} from '@nestjs/common';
 import { CreateProductInventoryDto } from './dto/create-product-inventory.dto';
 import { UpdateProductInventoryDto } from './dto/update-product-inventory.dto';
 import { Repository } from 'typeorm';
@@ -12,10 +11,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { StoreService } from 'src/store/store.service';
 import { ProductService } from 'src/product/product.service';
 
- 
-import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';  
+import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
- 
+import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class ProductInventoryService {
   constructor(
@@ -23,6 +22,7 @@ export class ProductInventoryService {
     private readonly productInventoryRepo: Repository<ProductInventory>,
     private readonly productService: ProductService,
     private readonly storeService: StoreService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(
@@ -38,35 +38,54 @@ export class ProductInventoryService {
 
     const newProductInventory = this.productInventoryRepo.create({
       ...createProductInventoryDto,
- 
+
       priceAfterOffer: parseFloat(
         (
           product.publicPrice *
           (1 - createProductInventoryDto.offerPercent / 100)
         ).toFixed(2),
-      ),  
+      ),
       product: product,
       store: store,
     });
 
- 
     await this.productInventoryRepo.save(newProductInventory);
- 
+
     try {
       await this.productInventoryRepo.save(newProductInventory);
     } catch (error) {
       throw new InternalServerErrorException(
         'Failed to create ProductInventory',
       );
-    } 
+    }
 
     return newProductInventory;
   }
 
-  async findAll(): Promise<ProductInventory[]> {
-    return await this.productInventoryRepo.find({
-      relations: ['product', 'store'],
-    });
+  /**
+   * Retrieve all products that have inventory available across all stores.
+   * This method fetches the products along with their details and aggregates the quantity of each product.
+   * quantity = number of available quantity or this product at all stores.
+   **/
+  async findAll() {
+    const productInventories = await this.productInventoryRepo
+      .createQueryBuilder('productInventory')
+      .leftJoinAndSelect('productInventory.product', 'product')
+      .leftJoinAndSelect('product.category', 'category')
+      .select([
+        'product.id',
+        'product.image',
+        'product.name',
+        'product.unitsPerPackage',
+        'product.publicPrice',
+        'category.name',
+        'SUM(productInventory.amount) as amount',
+      ])
+      .groupBy('product.id')
+      .addGroupBy('category.name')
+      .getRawMany();
+
+    return productInventories;
   }
 
   async findOne(id: number): Promise<ProductInventory> {
@@ -79,8 +98,11 @@ export class ProductInventoryService {
     }
     return existingProductInventory;
   }
- 
-  async update(id: number, updateProductInventoryDto: UpdateProductInventoryDto) {
+
+  async update(
+    id: number,
+    updateProductInventoryDto: UpdateProductInventoryDto,
+  ) {
     const productInventory = await this.productInventoryRepo.preload({
       id,
       ...updateProductInventoryDto,
@@ -91,24 +113,21 @@ export class ProductInventoryService {
     }
 
     return this.productInventoryRepo.save(productInventory);
-    } 
+  }
 
   remove(id: number) {
     return `This action removes a #${id} productInventory`;
   }
 
- 
-  
- async findALLByIDS(ids:Array<number>):Promise<ProductInventory[]>{
-  const products = await this.productInventoryRepo.createQueryBuilder()
-  .where('id IN(:...ids)', { ids })
-  .getMany();
+  async findALLByIDS(ids: Array<number>): Promise<ProductInventory[]> {
+    const products = await this.productInventoryRepo
+      .createQueryBuilder()
+      .where('id IN(:...ids)', { ids })
+      .getMany();
 
-  
-  return products;
- }
+    return products;
+  }
 
- 
   /**
    * Calculates the total count of "ActiveProducts" based on the specified period.
    * @param period - The allowed period (either "all-time", "day", "week", "month", or "year").
@@ -192,9 +211,8 @@ export class ProductInventoryService {
 
     const result = await queryBuilder.getRawOne();
     return result.productsCount;
-  } 
+  }
   save(productInventory: ProductInventory) {
-
     this.productInventoryRepo.save(productInventory);
   }
 }

@@ -131,7 +131,7 @@ export class ProductService {
    */
   async isExist(createProductDto: CreateProductDto): Promise<boolean> {
  
-    const category = await this.catService.findById(
+    const category = await this.catService.findOne(
       createProductDto.categoryID
     );
  
