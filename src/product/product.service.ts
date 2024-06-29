@@ -32,7 +32,7 @@ export class ProductService {
       throw new ConflictException('Product already exists');
     }
     const newProduct: Product = this.productRepo.create({
-      ...createProductDto, 
+      ...createProductDto,
       name: createProductDto.name.toUpperCase(),
       category: category, // Set the category of the new product
 
@@ -126,7 +126,9 @@ export class ProductService {
     // if (result.affected == 0)
     //   throw new NotFoundException(`product with id ${id} not found`);
   }
-
+  /**
+   * this method to check if the product allready exists or not before add new one
+   */
   async isExist(createProductDto: CreateProductDto): Promise<boolean> {
     const category = await this.catService.findOne(createProductDto.categoryID);
 
@@ -140,7 +142,7 @@ export class ProductService {
 
     return !!existingProduct;
   }
- 
+
   /**
    * Retrieve either the top 5 or bottom 5 products upon more demand based on @param isTop.
    * @param isTop - Determines whether to retrieve top products (true) or bottom products (false).
@@ -167,5 +169,45 @@ export class ProductService {
       .getRawMany();
 
     return topProducts;
-  } 
+  }
+
+  async filterProducts(
+    from?: number,
+    to?: number,
+    categoryId?: number,
+  ): Promise<any> {
+    if (categoryId !== undefined) {
+      const category = await this.catService.findOne(categoryId);
+    }
+
+    const query = this.productRepo
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category')
+      .select([
+        'product.id As Id',
+        'product.image As image',
+        'product.name AS name',
+        'category.name AS categoryname',
+        'product.unitsPerPackage AS unitsPerPackage',
+        'product.publicPrice AS publicPrice',
+      ]);
+
+    if (from !== undefined && to !== undefined) {
+      query.andWhere(
+        'product.publicPrice >= :from AND product.publicPrice <= :to',
+        {
+          from: from,
+          to: to,
+        },
+      );
+    }
+
+    if (categoryId !== undefined) {
+      query.andWhere('product.categoryId = :categoryId', { categoryId });
+    }
+
+    const products = await query.getRawMany();
+
+    return products;
+  }
 }
