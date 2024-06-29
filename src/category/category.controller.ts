@@ -33,12 +33,12 @@ export class CategoryController {
     return await this.categoryService.findAll();
   }
 
-  @Get(':id')
+  @Get('id/:id')
   async findById(@Param('id', ParseIntPipe) id: number): Promise<Category> {
     return await this.categoryService.findById(+id);
   }
 
-  @Get(':name')
+  @Get('name/:name')
   async findByName(@Param('name') name: string): Promise<Category> {
     return await this.categoryService.findByName(name);
   }

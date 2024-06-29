@@ -10,6 +10,8 @@ import {
   BadRequestException,
   UploadedFiles,
   ParseIntPipe,
+  UsePipes,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -17,12 +19,15 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { UploadService } from 'src/upload/upload.service';
- 
+
 import { ApiTags } from '@nestjs/swagger';
-import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
+import {
+  IsBooleanPipes,
+  ProductFilterPipe,
+} from 'src/common/pipes/user-type-validation.pipe';
 
 @ApiTags('Product')
-@Controller('products') 
+@Controller('products')
 export class ProductController {
   constructor(
     private readonly productService: ProductService,
@@ -62,6 +67,17 @@ export class ProductController {
     return await this.productService.findByName(name);
   }
 
+  @Get('filter')
+  @UsePipes(new ProductFilterPipe())
+  async filterProducts(
+    @Query() priceRange: { from?: number; to?: number; categoryId?: number },
+  ): Promise<any> {
+    const { from, to, categoryId } = priceRange;
+
+    // Call your service method:
+    return await this.productService.filterProducts(from, to, categoryId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productService.update(+id, updateProductDto);
@@ -71,12 +87,11 @@ export class ProductController {
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.productService.remove(+id);
   }
- 
 
   @Get('/top-products/:isTop')
   async getTopFiveProducts(
     @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
   ) {
     return await this.productService.getTopOrBottomProductsByDemand(isTop);
-  } 
+  }
 }
