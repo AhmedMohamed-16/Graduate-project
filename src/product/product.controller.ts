@@ -74,7 +74,6 @@ export class ProductController {
   ): Promise<any> {
     const { from, to, categoryId } = priceRange;
 
-    // Call your service method:
     return await this.productService.filterProducts(from, to, categoryId);
   }
 
