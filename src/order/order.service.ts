@@ -84,7 +84,22 @@ export class OrderService {
   }
 
  async findAll() {
-   return await this.orderRepository.find() ;
+  const result = await this.orderRepository.createQueryBuilder('order')
+  .leftJoin('order.pharmacy', 'pharmacy')
+  .leftJoin('order.ordersDetail', 'orderDetail')
+  .leftJoin('orderDetail.productInventory', 'productInventory')
+  .leftJoin('productInventory.store', 'store')
+  .select('order.id', 'id')
+  .addSelect('STRING_AGG(DISTINCT store.storeName, REPEAT(\' \', 4))', 'From')
+  .addSelect('STRING_AGG(DISTINCT pharmacy.pharmacyName, REPEAT(\' \', 4))', 'To')
+  .addSelect('order.createdAt', 'Date')
+  .addSelect('order.statusOrder', 'State')
+  .groupBy('order.id')
+  .orderBy('order.id', 'DESC')
+  .getRawMany();
+  //tab space with CHR() is
+
+return result;
   }
 
   async findOne(id: number) {
