@@ -12,6 +12,7 @@ import { AllowedPeriodPipe, IsBooleanPipes } from 'src/common/pipes/user-type-va
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
 import{Pharmacy} from 'src/pharmacy/entities/pharmacy.entity';
+import { StatusOrder } from 'src/common/enums/status-order.enum';
 
 @Controller('orders')
 export class OrderController {
@@ -29,6 +30,10 @@ export class OrderController {
   @Get()
   findAllOrders() {
     return this.orderService.findAll();
+  }
+  @Get('/:date/:state')
+  findAllOrders_filterByDateState(@Param('date') date:string,@Param('state') state:StatusOrder) {
+    return this.orderService.filterByDateState(date,state);
   }
 
   @Get('/get-latest') //for orders

@@ -58,7 +58,7 @@ export class OrderService {
 
         const pharmacy=await this.pharmacyService.findOne(id);
 
-     const order=   this.orderRepository.create({paymentMethod:PaymentMethod.CASH,statusOrder:StatusOrder.CONFIRM,totalCost,pharmacy});
+     const order=   this.orderRepository.create({paymentMethod:PaymentMethod.CASH,statusOrder:StatusOrder.ONHOLD,totalCost,pharmacy});
     //  await queryRunner.manager.save(order);
        for (let i = 0; i < ordersDetails.length; i++) {
          ordersDetails[i].order=order;  
@@ -101,12 +101,177 @@ export class OrderService {
 
 return result;
   }
+  async filterByDateState(date:string,state:StatusOrder) {
+
+const [fromDate, toDate] = date.split(' ');
+// Convert toDate to the end of the day
+const endOfDay = new Date(toDate);
+endOfDay.setHours(23, 59, 59, 999);
+
+  
+    const result = await this.orderRepository.createQueryBuilder('order')
+    .leftJoin('order.pharmacy', 'pharmacy')
+    .leftJoin('order.ordersDetail', 'orderDetail')
+    .leftJoin('orderDetail.productInventory', 'productInventory')
+    .leftJoin('productInventory.store', 'store')
+    .select('order.id', 'id')
+    .addSelect('STRING_AGG(DISTINCT store.storeName, REPEAT(\' \', 4))', 'From')
+    .addSelect('STRING_AGG(DISTINCT pharmacy.pharmacyName, REPEAT(\' \', 4))', 'To')
+    .addSelect('order.createdAt', 'Date')
+    .addSelect('order.statusOrder', 'State')
+    .where('order.createdAt BETWEEN :fromDate AND :toDate', {
+      fromDate: new Date(fromDate),
+      toDate: endOfDay
+    })
+    .andWhere('order.statusOrder=:state',{state})
+    .groupBy('order.id')
+    .orderBy('order.id', 'DESC')
+    .getRawMany();
+    //tab space with CHR() is
+  
+  return result;
+    }
+  
+
+
+
 
   async findOne(id: number) {
-   const order=await this.orderRepository.findOne({where:{id} 
-    ,relations:['pharmacy','ordersDetail','ordersDetail.productInventory']});
-  }
+  //  const order=await this.orderRepository.findOne({where:{id} 
+  //   ,relations:['pharmacy','ordersDetail','ordersDetail.productInventory']});
+  //   return order;
+  // const result = await this.orderRepository.createQueryBuilder('order')
+  // .leftJoin('order.pharmacy', 'pharmacy')
+  // .leftJoin('order.ordersDetail', 'orderDetail')
+  // .leftJoin('orderDetail.productInventory', 'productInventory')
+  // .leftJoin('productInventory.store', 'store')
+  // .leftJoin('productInventory.product', 'product')
+  // .select('order.id', 'id')
+  // .addSelect('STRING_AGG(DISTINCT store.storeName, REPEAT(\' \', 4))', 'From')
+  // .addSelect('STRING_AGG(DISTINCT pharmacy.pharmacyName, REPEAT(\' \', 4))', 'To')
+  // .addSelect('order.createdAt', 'Date')
+  // .addSelect('order.statusOrder', 'State')
+  // .addSelect('STRING_AGG(DISTINCT CONCAT(pharmacy.address, pharmacy.region, pharmacy.governorate, pharmacy.country), \', \')', 'Address')
+  // .addSelect(
+  //   'STRING_AGG(DISTINCT (product.name || \' \' || "product"."publicPrice" || \' \' ||"store"."storeName"|| \' \' ||"productInventory"."priceAfterOffer"::text || \' \' || "productInventory"."offerPercent"::text|| \' \' ||"orderDetail"."quantity"::text || \' \' || "orderDetail"."price"::text), REPEAT(\' \', 4)) ', "eeeee" )
+  // .where('order.id = :id', { id: id })
+  // .groupBy('order.id')
+  // .getRawMany();
+  // return result.map(event => ({
+  //   ...event,
+  //   Date: this.convertTo12HourFormat(event.Date).date,
+  //   Time: this.convertTo12HourFormat(event.Date).time,
+  // }));
+  
+  /**
+   *    "eeeee": "BI-ALCOFAN 55.00 El amria 52.25 5 20 1045.00    PANADOL 44.00 El amriaaa 41.36 6 30 1240.80",
+ "eeeee":  {Product:{BI-ALCOFAN,PANADOL},publicPrice{55.00,44.00},store{El amria,El amriaaa},priceAfterOffer{52.25,41.36},offerPercent{5,6},Quantity{20,30}}
+           }
+ "table": {{Product:BI-ALCOFAN,publicPrice:55.00,store:El amria,priceAfterOffer:52.25,offerPercent:5,Quantity:20},
+          {Product:PANADOL,publicPrice:44.00,store:El amriaaa,priceAfterOffer:41.36,offerPercent:6,Quantity:30}}
+   "Product$publicPrice": "BI-ALCOFAN 55.00    PANADOL 44.00",
+        "Store": "El amria    El amriaaa",
+        "priceAfterOffer$offerPercent": "41.36 6    52.25 5",
+        "Quantity$Product Total": "20 1045.00    30 1240.80",
+   */
+        const result = await this.orderRepository.createQueryBuilder('order')
+        .leftJoin('order.pharmacy', 'pharmacy')
+        .leftJoin('order.ordersDetail', 'orderDetail')
+        .leftJoin('orderDetail.productInventory', 'productInventory')
+        .leftJoin('productInventory.store', 'store')
+        .leftJoin('productInventory.product', 'product')
+        .select('order.id', 'id')
+        .addSelect('STRING_AGG(DISTINCT store.storeName, REPEAT(\' \', 4))', 'From')
+        .addSelect('STRING_AGG(DISTINCT pharmacy.pharmacyName, REPEAT(\' \', 4))', 'To')
+        .addSelect('order.createdAt', 'Date')
+        .addSelect('order.statusOrder', 'State')
+        .addSelect('STRING_AGG(DISTINCT CONCAT(pharmacy.address, pharmacy.region, pharmacy.governorate, pharmacy.country), \', \')', 'Address')
+        .addSelect(
+          `STRING_AGG(
+            DISTINCT (
+              product.name || '|' || 
+              "product"."publicPrice" || '|' || 
+              "store"."storeName" || '|' || 
+              "productInventory"."priceAfterOffer"::text || '|' || 
+              "productInventory"."offerPercent"::text || '|' || 
+              "orderDetail"."quantity"::text || '|' || 
+              "orderDetail"."price"::text
+            ), 
+            REPEAT(' ', 4)
+          )`, 
+          "table"
+        )
+        .where('order.id = :id', { id: id })
+        .groupBy('order.id')
+        .getRawMany();
+      
+      // Helper function to convert date to 12-hour format
+      
+      // Transform the raw results into the desired JSON structure
+      let TotalBeforeDescound=0,TotalAfterDescound=0;
+      const finalResults = result.map(rawOrder => {
+        // Extract and transform the 'table' field into the desired structure
+        const eeeeeParts = rawOrder.table.split('    '); // Split by the delimiter used in STRING_AGG
+        const table = eeeeeParts.map(part => {
+          // Remove extra spaces from storeName
 
+          const [productName, publicPrice, storeName, priceAfterOffer, offerPercent, quantity,price] = part.split('|');
+          TotalBeforeDescound+=parseFloat(publicPrice);
+          TotalAfterDescound+=parseFloat(priceAfterOffer); 
+          return {
+            Product: productName,
+            store: storeName,
+            publicPrice: publicPrice,
+            offer: offerPercent,
+            Quantity: quantity,
+            priceAfterOffer: priceAfterOffer,
+            ProductTotal: price
+          };
+        
+        });
+       
+
+        // Convert date to 12-hour format
+        const { date, time } = this.convertTo12HourFormat(rawOrder.Date);
+      
+        // Construct the final JSON object
+        return {
+          id: rawOrder.id,
+          State: rawOrder.State,
+          Date: date,
+          Time: time,
+          From: rawOrder.From, 
+          To: rawOrder.To, // Remove extra spaces
+          Address: rawOrder.Address,
+          table: table,
+          TotalBeforeDescound,
+          TotalAfterDescound,
+          TotalDescound: TotalBeforeDescound-TotalAfterDescound+"("+(100-(TotalAfterDescound/TotalBeforeDescound*100)) +"%)"
+        };
+      });
+      
+    return finalResults;
+  }
+  private convertTo12HourFormat(date: Date): { date: string, time: string } {
+    if (!date) {
+      console.error('Date is undefined');  // Debugging log
+      return { date: '', time: '' };
+    }
+  
+    const year = date.getUTCFullYear();
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+    const day = date.getUTCDate().toString().padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+  
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12;
+    const minutesStr = minutes < 10 ? `0${minutes}` : minutes;
+    const formattedTime = `${hours12}:${minutesStr} ${period}`;
+    //date.toISOString()
+    return { date: formattedDate, time: formattedTime };
+  }
   
   update(id: number, updateOrderDto: UpdateOrderDto) {
     return `This action updates a #${id} order`;
@@ -194,8 +359,12 @@ return result;
   .limit(5)
   .getRawMany();
   //tab space with CHR() is
-
-return result;
+  return result.map(event => ({
+    ...event,
+    Date: this.convertTo12HourFormat(event.Date).date+'   '
+    +this.convertTo12HourFormat(event.Date).time,
+    
+  })); 
  }
 
  async findOrdersforOnePharmacy(id:number){
@@ -214,7 +383,12 @@ return result;
   .orderBy('order.id', 'DESC') 
   .getRawMany();
 
-   return result;
+  return result.map(event => ({
+    ...event,
+    Date: this.convertTo12HourFormat(event.Date).date+'   '
+    +this.convertTo12HourFormat(event.Date).time,
+    
+  })); 
  }
  async getTotalBayingForOnePharmacy(id:number,
   period: AllowedPeriods,
