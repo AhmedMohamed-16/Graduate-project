@@ -62,7 +62,7 @@ export class ProductController {
   async findByName(@Param('name') name: string): Promise<Product> {
     return await this.productService.findByName(name);
   }
-
+ 
   @Get('')
   @UsePipes(new ProductFilterPipe())
   async findProductsInventory(
