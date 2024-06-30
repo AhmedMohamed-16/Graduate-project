@@ -53,7 +53,12 @@ export class OrderController {
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
     return await this.orderService.getTotalOrdersCount(id,period);
- 
+  }
+  @Get('/total-baying-ForOnePharmacy/:id/:period')
+  async getTotalBayingForOnePharmacy(@Param('id',ParseIntPipe) id: number,
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ cost: number; percentageChange: number }> {
+    return await this.orderService.getTotalBayingForOnePharmacy(id,period);
   }
 
   @Get(':id')

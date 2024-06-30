@@ -201,5 +201,60 @@ return result;
 
    return result;
  }
+ async getTotalBayingForOnePharmacy(id:number,
+  period: AllowedPeriods,
+): Promise<{ cost: number; percentageChange: number }> {
+  
+  if (period === AllowedPeriods.ALLTIME) {
+    
+    const whereCondetion = id !==0 ? {pharmacy: {id:id}}:{};
+    const totalCost = await this.orderRepository.sum('totalCost',  whereCondetion );
+    // const totalCount = await this.orderRepository.count({where: {pharmacy: {
+    //   id: 1
+    // }} });
+    return { cost: totalCost, percentageChange: 0 };
+  }
+
+  // Calculate the start and end dates for the current and previous periods
+  const {
+    currentStartDate,
+    currentEndDate,
+    previousStartDate,
+    previousEndDate,
+  } = CalculationsHelper.calculateDateRanges(period);
+  try { //id==0 means all pharmacies 
+    
+    const whereCurrent = id === 0 ? { createdAt: Between(currentStartDate, currentEndDate) } : { pharmacy: {id:id}, createdAt: Between(currentStartDate, currentEndDate) };
+    const wherePrevious = id === 0 ? { createdAt: Between(previousStartDate, previousEndDate) } : { pharmacy: {id:id}, createdAt: Between(previousStartDate, previousEndDate) };
+    
+      let [currentCost , previousCost ] = await Promise.all([
+      this.orderRepository.sum('totalCost',
+          whereCurrent  
+       ),
+      this.orderRepository.sum('totalCost',
+       wherePrevious,
+      ),
+    ]);
+   
+  //if currentCost or previousCost == null  assign 0
+  if (currentCost == null) {
+    currentCost = 0;
+  }
+  if (previousCost == null) {
+    previousCost = 0;
+  }
+
+
+    // Calculate the percentage change between the current and previous counts
+    const percentageChange: number =
+      CalculationsHelper.calculatePercentageChange(
+        currentCost,
+        previousCost,
+      );
+    return { cost: currentCost, percentageChange };
+  } catch (error) {
+    console.error('An error occurred while counting the orders:', error);
+  }
+}
 
 }
