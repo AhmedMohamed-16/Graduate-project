@@ -12,6 +12,7 @@ import { AllowedPeriodPipe, IsBooleanPipes } from 'src/common/pipes/user-type-va
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
 import{Pharmacy} from 'src/pharmacy/entities/pharmacy.entity';
+import { StatusOrder } from 'src/common/enums/status-order.enum';
 
 @Controller('orders')
 export class OrderController {
@@ -30,6 +31,10 @@ export class OrderController {
   findAllOrders() {
     return this.orderService.findAll();
   }
+  @Get('/:date/:state')
+  findAllOrders_filterByDateState(@Param('date') date:string,@Param('state') state:StatusOrder) {
+    return this.orderService.filterByDateState(date,state);
+  }
 
   @Get('/get-latest') //for orders
   async getLates( )  {
@@ -45,17 +50,29 @@ export class OrderController {
   async getTotalOrdersCount(
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
-    return await this.orderService.getTotalOrdersCount(period);
+    return await this.orderService.getTotalOrdersCount(0,period);
  
+  }
+  @Get('/total-count-ForOnePharmacy/:id/:period')
+  async getTotalOrdersCountForOnePharmacy(@Param('id',ParseIntPipe) id: number,
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.orderService.getTotalOrdersCount(id,period);
+  }
+  @Get('/total-baying-ForOnePharmacy/:id/:period')
+  async getTotalBayingForOnePharmacy(@Param('id',ParseIntPipe) id: number,
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ cost: number; percentageChange: number }> {
+    return await this.orderService.getTotalBayingForOnePharmacy(id,period);
   }
 
   @Get(':id')
   findOneOrder(@Param('id',ParseIntPipe) id: number) {
     return this.orderService.findOne(id); 
   }
-  @Get(':id')
-  findOrdersforUser(@Req() req: Request) {
-    return this.orderService.findOneUser(1);
+  @Get('findOrdersforPharmacy/:id')
+  findOrdersforPharmacy(@Param('id',ParseIntPipe) id: number) {
+    return this.orderService.findOrdersforOnePharmacy(id);
   }
   
 

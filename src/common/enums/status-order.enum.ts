@@ -1,6 +1,6 @@
 export enum StatusOrder{
-SUCCESS="SUCCESS",
- CANCEL="CANCEL",
-INPROGRESS="INPROGRESS",
-CONFIRM="CONFIRM",
+DELIVERED="Delivered",
+ CANCELED="Canceled",
+ONWAY="OnWay",
+ONHOLD="OnHold",
 }

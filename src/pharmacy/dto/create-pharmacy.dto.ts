@@ -76,4 +76,8 @@ export class CreatePharmacyDto {
   @ValidateNested()
   @Type(() => CreatePharmacistDto)
   pharmacist: CreatePharmacistDto; // Pharmacist data
+  
+  @ApiProperty({description:"updated for only admin"})
+  @IsBoolean()
+  isActive?: boolean;
 }

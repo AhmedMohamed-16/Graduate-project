@@ -12,7 +12,7 @@ id:number;
     @Column({ type: 'decimal', precision: 10, scale: 2 })
     totalCost:number;
 
-   @Column({default:StatusOrder.CONFIRM})
+   @Column({default:StatusOrder.ONHOLD})
    statusOrder:StatusOrder; 
 
    @Column({default:PaymentMethod.CASH})
