@@ -49,43 +49,6 @@ export class ProductService {
     return newProduct;
   }
 
-  async findAll(): Promise<Product[]> {
-    const existingProducts = await this.productRepo
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category')
-      .select([
-        'product.id',
-        'product.image',
-        'product.name',
-        'product.unitsPerPackage',
-        'product.publicPrice',
-
-        'category.name',
-      ])
-      .getMany();
-
-    if (!existingProducts) throw new NotFoundException('No products found');
-
-    // const productsWithImages = await Promise.all(
-    //   existingProducts.map(async (product) => {
-    //     const imagePath = join(process.cwd(), '', product.image);
-    //     const imageBuffer = await fs.readFile(imagePath);
-    //     const imageBase64 = imageBuffer.toString('base64');
-    //     return {
-    //       ...product,
-    //       image: imageBase64,
-    //     };
-    //   }),
-    // );
-
-    // return productsWithImages;
-
-    return existingProducts.map((product) => ({
-      ...product,
-      image: `${this.configService.get('BASE_URL')}/${product.image}`,
-    }));
-  }
-
   async findById(id: number): Promise<Product> {
     const existingProduct = await this.productRepo.findOneBy({ id });
 
