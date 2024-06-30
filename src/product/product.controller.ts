@@ -25,6 +25,7 @@ import {
   IsBooleanPipes,
   ProductFilterPipe,
 } from 'src/common/pipes/user-type-validation.pipe';
+import { ProductFiltersDto } from 'src/product-inventory/dto/product-firlter.dto';
 
 @ApiTags('Product')
 @Controller('products')
@@ -70,11 +71,11 @@ export class ProductController {
   @Get('filter')
   @UsePipes(new ProductFilterPipe())
   async filterProducts(
-    @Query() priceRange: { from?: number; to?: number; categoryId?: number },
+    @Query() productFiltersDto:ProductFiltersDto ,
   ): Promise<any> {
-    const { from, to, categoryId } = priceRange;
+    const { startRange, endRange, categoryId } = productFiltersDto;
 
-    return await this.productService.filterProducts(from, to, categoryId);
+    return await this.productService.filterProducts(startRange, endRange, categoryId);
   }
 
   @Patch(':id')

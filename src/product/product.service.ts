@@ -130,12 +130,8 @@ export class ProductService {
    * this method to check if the product allready exists or not before add new one
    */
   async isExist(createProductDto: CreateProductDto): Promise<boolean> {
- 
-    const category = await this.catService.findOne(
-      createProductDto.categoryID
-    );
- 
- 
+    const category = await this.catService.findOne(createProductDto.categoryID);
+
     const existingProduct = await this.productRepo.findOne({
       where: {
         name: createProductDto.name.toUpperCase(),
@@ -175,13 +171,19 @@ export class ProductService {
     return topProducts;
   }
 
+  /**
+   * Filters products based on optional price range and category ID.
+   * This method allows filtering of products by their public price range and category ID.
+   *
+   * @returns A promise that resolves to an array of filtered products.
+   **/
   async filterProducts(
-    from?: number,
-    to?: number,
+    startRange?: number,
+    endRange?: number,
     categoryId?: number,
   ): Promise<any> {
     if (categoryId !== undefined) {
-      const category = await this.catService.findOne(categoryId);
+      const ValidcategoryId = await this.catService.findOne(categoryId);
     }
 
     const query = this.productRepo
@@ -196,12 +198,12 @@ export class ProductService {
         'product.publicPrice AS publicPrice',
       ]);
 
-    if (from !== undefined && to !== undefined) {
+    if (startRange !== undefined && endRange !== undefined) {
       query.andWhere(
-        'product.publicPrice >= :from AND product.publicPrice <= :to',
+        'product.publicPrice >= :startRange AND product.publicPrice <= :endRange',
         {
-          from: from,
-          to: to,
+          startRange: startRange,
+          endRange: endRange,
         },
       );
     }

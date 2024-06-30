@@ -3,7 +3,7 @@ import {
   BadRequestException,
   PipeTransform,
 } from '@nestjs/common';
-import {   UserType } from '../enums/user-type.enum';
+import { UserType } from '../enums/user-type.enum';
 import { AllowedPeriods } from '../enums/allowed-periods.enum';
 export class UserTypeValidationPipe implements PipeTransform {
   transform(value: any, metadata: ArgumentMetadata) {
@@ -36,38 +36,48 @@ export class IsBooleanPipes implements PipeTransform {
 }
 
 export class ProductFilterPipe implements PipeTransform {
-  transform(value: any): { from?: number; to?: number; categoryId?: number } {
-    const from = value.from !== undefined ? parseFloat(value.from) : undefined;
-    const to = value.to !== undefined ? parseFloat(value.to) : undefined;
+  transform(value: any): {
+    startRange?: number;
+    endRange?: number;
+    categoryId?: number;
+  } {
+    const startRange =
+      value.startRange !== undefined ? parseFloat(value.startRange) : undefined;
+    const endRange =
+      value.endRange !== undefined ? parseFloat(value.endRange) : undefined;
     const categoryId =
       value.categoryId !== undefined
         ? parseInt(value.categoryId, 10)
         : undefined;
 
-    // Handle case where either 'from' or 'to' is provided without the other
+    // Handle case where either 'startRange' or 'endRange' is provided without the other
     if (
-      (from === undefined && to !== undefined) ||
-      (from !== undefined && to === undefined)
+      (startRange === undefined && endRange !== undefined) ||
+      (startRange !== undefined && endRange === undefined)
     ) {
       throw new BadRequestException(
-        'Both "from" and "to" values must be provided together.',
+        'Both "startRange" and "endRange" values must be provided together.',
       );
     }
 
-    // Handle case where 'from' or 'to' is not a valid number
+    // Handle case where 'startRange' or 'endRange' is not a valid number
     if (
-      (from !== undefined && isNaN(from)) ||
-      (to !== undefined && isNaN(to))
+      (startRange !== undefined && isNaN(startRange)) ||
+      (endRange !== undefined && isNaN(endRange))
     ) {
       throw new BadRequestException(
         'Invalid price range. Please provide valid numeric values.',
       );
     }
 
-    // Handle case where 'from' is greater than 'to'
-    if (from !== undefined && to !== undefined && from > to) {
+    // Handle case where 'startRange' is greater than 'endRange'
+    if (
+      startRange !== undefined &&
+      endRange !== undefined &&
+      startRange > endRange
+    ) {
       throw new BadRequestException(
-        'Invalid price range. "from" should be less than or equal to "to".',
+        'Invalid price range. "startRange" should be less than or equal to "endRange".',
       );
     }
 
@@ -78,6 +88,6 @@ export class ProductFilterPipe implements PipeTransform {
       );
     }
 
-    return { from, to, categoryId };
+    return { startRange, endRange, categoryId };
   }
 }
