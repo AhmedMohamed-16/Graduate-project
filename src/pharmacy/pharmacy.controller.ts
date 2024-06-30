@@ -33,11 +33,11 @@ export class PharmacyController {
 
   
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updatePharmacyDto: UpdatePharmacyDto,
   ) {
-    return this.pharmacyService.update(+id, updatePharmacyDto);
+    return await this.pharmacyService.update(+id, updatePharmacyDto);
   }
 
   @Delete(':id')

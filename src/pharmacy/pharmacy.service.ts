@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePharmacyDto } from './dto/create-pharmacy.dto';
 import { UpdatePharmacyDto } from './dto/update-pharmacy.dto';
 import { InjectRepository ,} from '@nestjs/typeorm';
@@ -57,10 +57,19 @@ export class PharmacyService {
     return await this.pharmacyRepo.findOne({ where: { userName } });
   }
 
-  update(id: number, updatePharmacyDto: UpdatePharmacyDto) {
-    return `This action updates a #${id} pharmacy`;
-  }
+  async update(id: number, updatePharmacyDto: UpdatePharmacyDto) {
+    const pharmacy = await this.pharmacyRepo.preload({
+      id,
+      ...updatePharmacyDto,
+    });
 
+    if (!pharmacy) {
+      throw new NotFoundException(`There is no order under id ${id}`);
+    }
+
+    return await this.pharmacyRepo.save(pharmacy);
+    
+  } 
   remove(id: number) {
     return `This action removes a #${id} pharmacy`;
   } 
