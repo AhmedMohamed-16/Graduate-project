@@ -92,10 +92,7 @@ export class OrderService {
     ,relations:['pharmacy','ordersDetail','ordersDetail.productInventory']});
   }
 
-  async findOneUser(id:number){
-   const pharmacy=await this.pharmacyService.findOne(id); 
-    return pharmacy;
-  }
+  
   update(id: number, updateOrderDto: UpdateOrderDto) {
     return `This action updates a #${id} order`;
   }
@@ -104,11 +101,17 @@ export class OrderService {
     return `This action removes a #${id} order`;
   } 
 
-  async getTotalOrdersCount(
+  async getTotalOrdersCount(id:number,
     period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
+    
     if (period === AllowedPeriods.ALLTIME) {
-      const totalCount = await this.orderRepository.count({});
+      
+      const whereCondetion = id !==0 ? {pharmacy: {id:id}}:{};
+      const totalCount = await this.orderRepository.count({where:  whereCondetion });
+      // const totalCount = await this.orderRepository.count({where: {pharmacy: {
+      //   id: 1
+      // }} });
       return { count: totalCount, percentageChange: 0 };
     }
 
@@ -119,16 +122,21 @@ export class OrderService {
       previousStartDate,
       previousEndDate,
     } = CalculationsHelper.calculateDateRanges(period);
-    try {
-      const [currentCount, previousCount] = await Promise.all([
+    try { //id==0 means all pharmacies 
+      
+      const whereCurrent = id === 0 ? { createdAt: Between(currentStartDate, currentEndDate) } : { pharmacy: {id:id}, createdAt: Between(currentStartDate, currentEndDate) };
+      const wherePrevious = id === 0 ? { createdAt: Between(previousStartDate, previousEndDate) } : { pharmacy: {id:id}, createdAt: Between(previousStartDate, previousEndDate) };
+    
+        const [currentCount, previousCount] = await Promise.all([
         this.orderRepository.count({
-          where: { createdAt: Between(currentStartDate, currentEndDate) },
+          where:  whereCurrent ,
         }),
         this.orderRepository.count({
-          where: { createdAt: Between(previousStartDate, previousEndDate) },
+          where: wherePrevious,
         }),
       ]);
-
+     
+    
       // Calculate the percentage change between the current and previous counts
       const percentageChange: number =
         CalculationsHelper.calculatePercentageChange(
@@ -162,8 +170,10 @@ return result;
   .leftJoin('orderDetail.productInventory', 'productInventory')
   .leftJoin('productInventory.store', 'store')
   .select('order.id', 'id')
-  .addSelect('STRING_AGG(DISTINCT pharmacy.pharmacyName, REPEAT(\' \', 4))', 'To')
   .addSelect('STRING_AGG(DISTINCT store.storeName, REPEAT(\' \', 4))', 'From')
+  .addSelect('STRING_AGG(DISTINCT pharmacy.pharmacyName, REPEAT(\' \', 4))', 'To')
+  .addSelect('order.createdAt', 'Date')
+  .addSelect('order.statusOrder', 'State')
   .groupBy('order.id')
   .orderBy('order.id', 'DESC')
   .limit(5)
@@ -172,4 +182,24 @@ return result;
 
 return result;
  }
+
+ async findOrdersforOnePharmacy(id:number){
+  const result = await this.orderRepository.createQueryBuilder('order')
+  .leftJoin('order.pharmacy', 'pharmacy')
+  .leftJoin('order.ordersDetail', 'orderDetail')
+  .leftJoin('orderDetail.productInventory', 'productInventory')
+  .leftJoin('productInventory.store', 'store')
+  .select('order.id', 'id')
+  .addSelect('STRING_AGG(DISTINCT store.storeName, REPEAT(\' \', 4))', 'From')
+  .addSelect('STRING_AGG(DISTINCT pharmacy.pharmacyName, REPEAT(\' \', 4))', 'To')
+  .addSelect('order.createdAt', 'Date')
+  .addSelect('order.statusOrder', 'State')
+  .where('pharmacy.id=:id',{id:id})
+  .groupBy('order.id')
+  .orderBy('order.id', 'DESC') 
+  .getRawMany();
+
+   return result;
+ }
+
 }

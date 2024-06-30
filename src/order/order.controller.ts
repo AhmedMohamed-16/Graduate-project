@@ -45,7 +45,14 @@ export class OrderController {
   async getTotalOrdersCount(
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
-    return await this.orderService.getTotalOrdersCount(period);
+    return await this.orderService.getTotalOrdersCount(0,period);
+ 
+  }
+  @Get('/total-count-ForOnePharmacy/:id/:period')
+  async getTotalOrdersCountForOnePharmacy(@Param('id',ParseIntPipe) id: number,
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{ count: number; percentageChange: number }> {
+    return await this.orderService.getTotalOrdersCount(id,period);
  
   }
 
@@ -53,9 +60,9 @@ export class OrderController {
   findOneOrder(@Param('id',ParseIntPipe) id: number) {
     return this.orderService.findOne(id); 
   }
-  @Get(':id')
-  findOrdersforUser(@Req() req: Request) {
-    return this.orderService.findOneUser(1);
+  @Get('findOrdersforPharmacy/:id')
+  findOrdersforPharmacy(@Param('id',ParseIntPipe) id: number) {
+    return this.orderService.findOrdersforOnePharmacy(id);
   }
   
 
