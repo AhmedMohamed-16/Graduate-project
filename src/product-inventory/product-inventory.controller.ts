@@ -7,15 +7,21 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
+  UsePipes,
 } from '@nestjs/common';
 import { ProductInventoryService } from './product-inventory.service';
 import { CreateProductInventoryDto } from './dto/create-product-inventory.dto';
 import { UpdateProductInventoryDto } from './dto/update-product-inventory.dto';
 import { ProductInventory } from './entities/product-inventory.entity';
 
-import { AllowedPeriodPipe } from 'src/common/pipes/user-type-validation.pipe';
+import {
+  AllowedPeriodPipe,
+  ProductFilterPipe,
+} from 'src/common/pipes/user-type-validation.pipe';
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { ApiTags } from '@nestjs/swagger';
+import { ProductFiltersDto } from './dto/product-firlter.dto';
 
 @ApiTags('ProductInventory')
 @Controller('products-inventory')
@@ -32,8 +38,17 @@ export class ProductInventoryController {
   }
 
   @Get()
-  findAll() {
-    return this.productInventoryService.findAll();
+  @UsePipes(new ProductFilterPipe())
+  findAllWithFilter(
+    @Query()
+    filters: ProductFiltersDto,
+  ) {
+    const { startRange, endRange, categoryId } = filters;
+    return this.productInventoryService.filterProductsInventory(
+      startRange,
+      endRange,
+      categoryId,
+    );
   }
 
   @Patch(':id')

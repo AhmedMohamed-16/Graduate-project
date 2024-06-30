@@ -14,6 +14,7 @@ import { ProductService } from 'src/product/product.service';
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
 import { ConfigService } from '@nestjs/config';
+import { CategoryService } from 'src/category/category.service';
 
 @Injectable()
 export class ProductInventoryService {
@@ -22,6 +23,7 @@ export class ProductInventoryService {
     private readonly productInventoryRepo: Repository<ProductInventory>,
     private readonly productService: ProductService,
     private readonly storeService: StoreService,
+    private readonly categoryService: CategoryService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -64,11 +66,21 @@ export class ProductInventoryService {
 
   /**
    * Retrieve all products that have inventory available across all stores.
-   * This method fetches the products along with their details and aggregates the quantity of each product.
-   * quantity = number of available quantity or this product at all stores.
+   * This method fetches product details and aggregates the quantity of each product across all stores.
+   * quantity = number of available quantity of this product across all stores.
+   *
+   * Optionally, products can be filtered by a price range and category ID.
    **/
-  async findAll() {
-    const productInventories = await this.productInventoryRepo
+  async filterProductsInventory(
+    startRange?: number,
+    endRange?: number,
+    categoryId?: number,
+  ) {
+    if (categoryId !== undefined) {
+      const isValidcategoryId = await this.categoryService.findOne(categoryId);
+    }
+
+    const query = this.productInventoryRepo
       .createQueryBuilder('productInventory')
       .leftJoinAndSelect('productInventory.product', 'product')
       .leftJoinAndSelect('product.category', 'category')
@@ -82,8 +94,20 @@ export class ProductInventoryService {
         'SUM(productInventory.amount) as amount',
       ])
       .groupBy('product.id')
-      .addGroupBy('category.name')
-      .getRawMany();
+      .addGroupBy('category.name');
+
+    if (startRange !== undefined && endRange !== undefined) {
+      query.andWhere(
+        'product.publicPrice >= :from  AND product.publicPrice <= :to',
+        { from: startRange, to: endRange },
+      );
+    }
+
+    if (categoryId !== undefined) {
+      query.andWhere('product.category = :categoryId', { categoryId });
+    }
+
+    const productInventories = await query.getRawMany();
 
     return productInventories;
   }
