@@ -53,11 +53,6 @@ export class ProductController {
     return await this.productService.create(createProductDto);
   }
 
-  @Get()
-  async findAll(): Promise<Product[]> {
-    return await this.productService.findAll();
-  }
-
   @Get('id/:id')
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<Product> {
     return await this.productService.findById(+id);
@@ -68,9 +63,9 @@ export class ProductController {
     return await this.productService.findByName(name);
   }
 
-  @Get('filter')
+  @Get('')
   @UsePipes(new ProductFilterPipe())
-  async filterProducts(
+  async findProductsInventory(
     @Query() productFiltersDto:ProductFiltersDto ,
   ): Promise<any> {
     const { startRange, endRange, categoryId } = productFiltersDto;
