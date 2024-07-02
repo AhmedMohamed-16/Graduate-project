@@ -283,4 +283,34 @@ export class ProductInventoryService {
   save(productInventory: ProductInventory) {
     this.productInventoryRepo.save(productInventory);
   }
+
+//getHotDeals that can be accessed from home page on mobile app , access it from order Controller
+async getHotDeals(): Promise<any[]> {
+  const query = await this.productInventoryRepo
+    .createQueryBuilder('productInventory')
+    .innerJoinAndSelect('productInventory.product', 'product')
+    .innerJoinAndSelect('productInventory.store', 'store')
+    .andWhere('productInventory.amount > 0') // Ensure available stock
+    .andWhere('productInventory.offerPercent >= :minDiscount', { minDiscount: 30 }) // Minimum discount percentage for hot deals
+    .andWhere('(productInventory.amount <= :lowStockThreshold OR productInventory.amount >= :highStockThreshold)', { lowStockThreshold: 5, highStockThreshold: 50 })
+    .orderBy('productInventory.offerPercent', 'DESC') // Sort by discount
+    .getMany();
+
+  // console.log(query);
+
+  const res = query.map(productinv => ({
+    productInventory_id: productinv.id,
+    name: productinv.product.name,
+    tablets: productinv.product.activeIngredientInEachTablet + 'mg/ ' + productinv.product.unitsPerPackage + 'Tablets',
+    storeName: productinv.store.storeName,
+    publicPrice: productinv.product.publicPrice,
+    priceAfterOffer: productinv.priceAfterOffer,
+    offerPercent: productinv.offerPercent,
+    image: productinv.product.image, // Convert image path to URL
+    messageOfAmount: productinv.amount <= 5 ? `quantityLeft Only ${productinv.amount} left!` : productinv.amount >= 50 ? `highStock ${productinv.amount} Plenty in stock!` : null,
+  }));
+
+  return res;
+}
+
 }

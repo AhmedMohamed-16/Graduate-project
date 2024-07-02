@@ -13,10 +13,12 @@ import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
 import{Pharmacy} from 'src/pharmacy/entities/pharmacy.entity';
 import { StatusOrder } from 'src/common/enums/status-order.enum';
-
+import { join } from 'path'
+import { ProductInventoryService } from 'src/product-inventory/product-inventory.service';
 @Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService,
+    private readonly  productInventoryService: ProductInventoryService
    ) {}
 
   @UseGuards(JwtAuthGaurd,RoleGuard)
@@ -31,11 +33,7 @@ export class OrderController {
   findAllOrders() {
     return this.orderService.findAll();
   }
-  @Get('/:date/:state')
-  findAllOrders_filterByDateState(@Param('date') date:string,@Param('state') state:StatusOrder) {
-    return this.orderService.filterByDateState(date,state);
-  }
-
+ 
   @Get('/get-latest') //for orders
   async getLates( )  {
     return await this.orderService.getLates();
@@ -65,6 +63,19 @@ export class OrderController {
   ): Promise<{ cost: number; percentageChange: number }> {
     return await this.orderService.getTotalBayingForOnePharmacy(id,period);
   }
+  @Get('/mostSelling/:region')
+  mostSelling(@Param('region') region:string
+    , @Res() res) {
+       
+      const result=this.orderService.getMostSoldProductInventory(region);
+      return {result,image:res.sendFile(join(process.cwd(), `uploads/${name}`))};
+  }
+   
+  
+  @Get('/HotDeals')
+  async getHotDeals() {
+     return await this.productInventoryService.getHotDeals();
+  }
 
   @Get(':id')
   findOneOrder(@Param('id',ParseIntPipe) id: number) {
@@ -85,4 +96,9 @@ export class OrderController {
   remove(@Param('id') id: string) {
     return this.orderService.remove(+id);
   }
+  @Get('/:date/:state')
+  findAllOrders_filterByDateState(@Param('date') date:string,@Param('state') state:StatusOrder) {
+    return this.orderService.filterByDateState(date,state);
+  }
+
 }

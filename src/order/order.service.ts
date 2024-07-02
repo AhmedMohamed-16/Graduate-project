@@ -445,5 +445,46 @@ return result;
     console.error('An error occurred while counting the orders:', error);
   }
 }
+async getMostSoldProductInventory(location: string): Promise<any[]> {
+
+  const query = await this.orderRepository.createQueryBuilder('order')
+      .innerJoin('order.pharmacy', 'pharmacy')
+      .innerJoin('order.ordersDetail', 'ordersDetail')
+      .innerJoin('ordersDetail.productInventory', 'productInventory')
+      .innerJoin('productInventory.product', 'product')
+      .innerJoin('productInventory.store', 'store')
+      .where('pharmacy.address ILIKE :location OR pharmacy.region ILIKE :location OR pharmacy.governorate ILIKE :location OR pharmacy.country ILIKE :location', { location: `%${location}%` })
+      .select([
+          'product.image AS image',
+          'product.name AS name',
+          'product.unitsPerPackage AS tablets',
+          'product.activeIngredientInEachTablet AS activeIngredientInEachTablet',
+          'product.publicPrice AS publicPrice',
+          'productInventory.offerPercent AS offerPercent',
+          'productInventory.priceAfterOffer AS priceAfterOffer',
+          'store.storeName AS storeName'
+      ])
+      .addSelect('SUM(ordersDetail.quantity)', 'totalQuantity')
+      .groupBy('productInventory.id, product.image, product.name, product.unitsPerPackage, product.activeIngredientInEachTablet, product.publicPrice, productInventory.offerPercent, productInventory.priceAfterOffer, store.storeName')
+      .having('productInventory.amount > 0')
+      .orderBy('SUM(ordersDetail.quantity)', 'DESC')
+      .getRawMany();
+
+  console.log(query); // Log the query result
+   
+  const result = query.map(event => ({
+      name: event.name,
+      tablets: event.activeingredientineachtablet + 'mg/ ' + event.tablets + 'Tablets',
+      storeName: event.storename,
+      publicPrice: event.publicprice,
+      priceAfterOffer: event.priceafteroffer,
+      offerPercent: event.offerpercent,
+      image: event.image, // Convert image path to URL
+  }));
+
+  console.log(result); // Log the mapped result
+  return result;
+}
+
 
 }
