@@ -18,10 +18,12 @@ import { ProductInventory } from './entities/product-inventory.entity';
 import {
   AllowedPeriodPipe,
   ProductFilterPipe,
+  ProductInventoryFilerPip,
 } from 'src/common/pipes/user-type-validation.pipe';
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { ApiTags } from '@nestjs/swagger';
-import { ProductFiltersDto } from './dto/product-firlter.dto';
+import { ProductFiltersDto } from './dto/product-filter.dto';
+import { ProductInventoryFiltersDto } from './dto/product-inv-filter.dto ';
 
 @ApiTags('ProductInventory')
 @Controller('products-inventory')
@@ -39,12 +41,12 @@ export class ProductInventoryController {
 
   @Get()
   @UsePipes(new ProductFilterPipe())
-  findAllWithFilter(
+  async findAllWithFilter(
     @Query()
     filters: ProductFiltersDto,
   ) {
     const { startRange, endRange, categoryId } = filters;
-    return this.productInventoryService.filterProductsInventory(
+    return await this.productInventoryService.filterProductsInventory(
       startRange,
       endRange,
       categoryId,
@@ -52,11 +54,14 @@ export class ProductInventoryController {
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateProductInventoryDto: UpdateProductInventoryDto,
   ) {
-    return this.productInventoryService.update(+id, updateProductInventoryDto);
+    return await this.productInventoryService.update(
+      +id,
+      updateProductInventoryDto,
+    );
   }
 
   @Delete(':id')
@@ -69,6 +74,19 @@ export class ProductInventoryController {
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
     return await this.productInventoryService.getActiveProductsCount(period);
+  }
+
+  @Get('/inventory-of-one-product/')
+  @UsePipes(new ProductInventoryFilerPip())
+  async findInventoryOfOneProduct(
+    @Query() filters: ProductInventoryFiltersDto,
+  ) {
+    const { productId, miniOffer, maxOffer } = filters;
+    return await this.productInventoryService.findInventoryOfOneProduct(
+      productId,
+      miniOffer,
+      maxOffer,
+    );
   }
 
   @Get(':id')

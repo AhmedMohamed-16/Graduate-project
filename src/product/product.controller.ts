@@ -25,7 +25,7 @@ import {
   IsBooleanPipes,
   ProductFilterPipe,
 } from 'src/common/pipes/user-type-validation.pipe';
-import { ProductFiltersDto } from 'src/product-inventory/dto/product-firlter.dto';
+import { ProductFiltersDto } from 'src/product-inventory/dto/product-filter.dto';
 
 @ApiTags('Product')
 @Controller('products')
@@ -62,15 +62,19 @@ export class ProductController {
   async findByName(@Param('name') name: string): Promise<Product> {
     return await this.productService.findByName(name);
   }
- 
+
   @Get('')
   @UsePipes(new ProductFilterPipe())
   async findProductsInventory(
-    @Query() productFiltersDto:ProductFiltersDto ,
+    @Query() productFiltersDto: ProductFiltersDto,
   ): Promise<any> {
     const { startRange, endRange, categoryId } = productFiltersDto;
 
-    return await this.productService.filterProducts(startRange, endRange, categoryId);
+    return await this.productService.filterProducts(
+      startRange,
+      endRange,
+      categoryId,
+    );
   }
 
   @Patch(':id')

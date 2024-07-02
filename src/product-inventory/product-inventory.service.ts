@@ -65,12 +65,58 @@ export class ProductInventoryService {
   }
 
   /**
+   * Retrieves the inventory of a specific product across each store separately.
+   * 
+   * @param  productId - Mandatory: The ID of the product.
+   * @param  miniOffer - Optional: Minimum offer percentage filter.
+   * @param  maxOffer  - Optional: Maximum offer percentage filter.
+   * @returns {Promise<any[]>} - An array of raw inventory data.
+   */
+  async findInventoryOfOneProduct(
+    productId: number,
+    miniOffer?: number,
+    maxOffer?: number,
+  ): Promise<any[]> {
+    const isValidProductId = await this.productService.findById(productId);
+
+    const query = this.productInventoryRepo
+      .createQueryBuilder('ProductInventory')
+      .leftJoinAndSelect('ProductInventory.product', 'product')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('ProductInventory.store', 'store')
+      .select([
+        'product.id',
+        'product.image',
+        'product.name',
+        'product.unitsPerPackage',
+        'product.publicPrice',
+        'category.name',
+        'store.storeName',
+        'ProductInventory.id',
+        'ProductInventory.offerPercent',
+        'ProductInventory.amount',
+      ])
+      .where('product.id = :productId', { productId });
+
+    if (miniOffer !== undefined && maxOffer !== undefined) {
+      query.andWhere(
+        'ProductInventory.offerPercent >= :miniOffer AND ProductInventory.offerPercent <= :maxOffer',
+        { miniOffer, maxOffer },
+      );
+    }
+
+    return await query.getRawMany();
+  }
+  /**
    * Retrieve all products that have inventory available across all stores.
    * This method fetches product details and aggregates the quantity of each product across all stores.
-   * quantity = number of available quantity of this product across all stores.
+   * The quantity represent the available quantity of this product across all stores.
    *
-   * Optionally, products can be filtered by a price range and category ID.
-   **/
+   * @param startRange - Optional: Minimum publicPrice range filter.
+   * @param endRange - Optional: Maximum publicPrice range filter.
+   * @param categoryId - Optional: Category ID filter.
+   * @returns - An array of raw product inventory data.
+   */
   async filterProductsInventory(
     startRange?: number,
     endRange?: number,
@@ -107,9 +153,7 @@ export class ProductInventoryService {
       query.andWhere('product.category = :categoryId', { categoryId });
     }
 
-    const productInventories = await query.getRawMany();
-
-    return productInventories;
+    return await query.getRawMany();
   }
 
   async findOne(id: number): Promise<ProductInventory> {

@@ -1,15 +1,14 @@
 import { IsNumber, IsOptional } from 'class-validator';
 
-export class ProductFiltersDto {
+export class ProductInventoryFiltersDto {
   @IsNumber()
-  @IsOptional()
-  startRange?: number;
+  productId: number;
 
   @IsNumber()
   @IsOptional()
-  endRange?: number;
-  
+  miniOffer?: number;
+
   @IsNumber()
   @IsOptional()
-  categoryId?: number;
+  maxOffer?: number;
 }
