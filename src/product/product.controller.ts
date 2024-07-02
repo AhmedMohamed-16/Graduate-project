@@ -12,6 +12,7 @@ import {
   ParseIntPipe,
   UsePipes,
   Query,
+  Res,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -26,7 +27,7 @@ import {
   ProductFilterPipe,
 } from 'src/common/pipes/user-type-validation.pipe';
 import { ProductFiltersDto } from 'src/product-inventory/dto/product-filter.dto';
-
+import {join} from 'path'
 @ApiTags('Product')
 @Controller('products')
 export class ProductController {
@@ -92,5 +93,9 @@ export class ProductController {
     @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
   ) {
     return await this.productService.getTopOrBottomProductsByDemand(isTop);
+  }
+  @Get('getImage')
+  async gitImage(@Query('imagName') name: string, @Res() res) {
+    return  res.sendFile(join(process.cwd(), `${name}`));
   }
 }
