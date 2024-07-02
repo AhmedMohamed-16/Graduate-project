@@ -1,6 +1,7 @@
 import {
   ArgumentMetadata,
   BadRequestException,
+  NotFoundException,
   PipeTransform,
 } from '@nestjs/common';
 import { UserType } from '../enums/user-type.enum';
@@ -89,5 +90,41 @@ export class ProductFilterPipe implements PipeTransform {
     }
 
     return { startRange, endRange, categoryId };
+  }
+}
+
+export class ProductInventoryFilerPip implements PipeTransform {
+  transform(value: any): {
+    miniOffer: number;
+    maxOffer: number;
+    productId: number;
+  } {
+    const productId = value.productId;
+    const miniOffer = value.miniOffer !== undefined ? value.miniOffer : undefined;
+    const maxOffer = value.maxOffer !== undefined ? value.maxOffer : undefined;
+
+    if (
+      (miniOffer === undefined && maxOffer !== undefined) ||
+      (miniOffer !== undefined && maxOffer === undefined)
+    ) {
+      throw new BadRequestException(
+        'Both "miniOffer" and "maxOffer" values must be provided together.',
+      );
+    }
+
+    if (
+      miniOffer !== undefined &&
+      maxOffer !== undefined &&
+      miniOffer > maxOffer
+    ) {
+      throw new BadRequestException(
+        'Invalid price range. "miniOffer" should be less than or equal to "maxOffer".',
+      );
+    }
+
+    if (productId === undefined) {
+      throw new NotFoundException('productId is Should be provided');
+    }
+    return { miniOffer, maxOffer, productId };
   }
 }
