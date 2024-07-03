@@ -33,7 +33,7 @@ export class StoreController {
 
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.storeService.findOne(+id);
+    return await this.storeService.findById(+id);
   }
 
   @Get(':name?')

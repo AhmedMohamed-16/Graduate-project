@@ -63,6 +63,31 @@ export class StoreService {
     else return existingStore;
   }
 
+  async findById(id: number) {
+    const EisxistingStore = await this.findOne(id); 
+
+    const query = this.storeRepo
+      .createQueryBuilder('Store')
+      .select([
+        'Store.id AS id', 
+        'Store.storeName AS storeName',
+        'Store.userName  AS suerName',
+        'Store.isActive AS isActive',
+        'Store.email  AS email',
+        'Store.contactNumber AS contactNumber',
+        'Store.country AS country',
+        'Store.governorate AS governorate',
+        'Store.region AS region',
+        'Store.address AS address',
+        'Store.taxLicense AS taxLicense',
+        'Store.taxCard AS taxCard',
+        'Store.commercialRegister AS commercialRegister',
+      ])
+      .where('Store.id = :id', { id });
+
+    return query.getRawOne();
+  }
+
   async findByUserName(userName: string): Promise<Store | undefined> {
     return await this.storeRepo.findOne({ where: { userName: userName } });
   }
