@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
 import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
+import { Product } from 'src/product/entities/product.entity';
  
 
 @Injectable()
@@ -129,4 +130,21 @@ export class StoreService {
 
   //   return topStores;
   // }
-} 
+  async customFindById(id: number) { 
+    const  Store = await this.storeRepo.findOne({where:{id}  ,relations:['productInventories','productInventories.product']});
+     if (!Store)
+      throw new NotFoundException(`Store with ID ${id} not found`);
+ 
+    
+   return Store.productInventories.map(productInventory =>({
+    name: productInventory.product.name,
+    tablets: productInventory.product.activeIngredientInEachTablet + 'mg/ ' + productInventory.product.unitsPerPackage + 'Tablets',
+    storeName: Store.storeName,
+    publicPrice:  productInventory.product.publicPrice,
+    priceAfterOffer: productInventory.priceAfterOffer,
+    offerPercent:productInventory.offerPercent,
+    image: productInventory.product.image, 
+   }));
+  
+}
+}
