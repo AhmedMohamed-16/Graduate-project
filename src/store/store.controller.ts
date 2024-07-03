@@ -57,10 +57,10 @@ export class StoreController {
   }
  
 
-  // @Get('/top-selling-stores/:isTop')
-  // async getTopOrBottomStores(
-  //   @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
-  // ): Promise<Store[]> {
-  //   return await this.storeService.getTopOrBottomStores(isTop);
-  // } 
+  @Get('/top-selling-stores/:isTop')
+  async getTopOrBottomStores(
+    @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
+  ): Promise<Store[]> {
+    return await this.storeService.getTopOrBottomStores(isTop);
+  } 
 }
