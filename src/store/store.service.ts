@@ -4,12 +4,10 @@ import { UpdateStoreDto } from './dto/update-store.dto';
 import { Store } from './entities/store.entity';
 import { Between, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
- 
 
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
 import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
- 
 
 @Injectable()
 export class StoreService {
@@ -25,13 +23,34 @@ export class StoreService {
     }
 
     const newStore = this.storeRepo.create({
-      ...createStoreDto, 
+      ...createStoreDto,
     });
     return await this.storeRepo.save(newStore);
   }
 
- async findAll() {
-    return await this.storeRepo.find();
+  /**
+   * Retrieve a list of stores, optionally filtered by store name.
+   *
+   * If a name is provided, the query filters stores whose names contain the given substring.
+   * eles if return all stores.
+   *
+   * @param name - Optional: The name or partial name of the store to filter by.
+   */
+  async findStoresByName(name: string) {
+    const query = this.storeRepo
+      .createQueryBuilder('Store')
+      .select([
+        'Store.id',
+        'Store.storeName',
+        'Store.contactNumber',
+        'Store.address',
+      ]);
+
+    if (name) {
+      query.andWhere('LOWER(Store.storeName) LIKE LOWER(:name) ', { name: `%${name}%` });
+    }
+
+    return await query.getRawMany();
   }
 
   async findById(id: number) {
@@ -46,7 +65,7 @@ export class StoreService {
     return await this.storeRepo.findOne({ where: { userName: userName } });
   }
 
- async  update(id: number, updateStoreDto: UpdateStoreDto) {
+  async update(id: number, updateStoreDto: UpdateStoreDto) {
     let store = await this.findById(id);
 
     if (store) {
@@ -54,15 +73,14 @@ export class StoreService {
       return await this.storeRepo.save({
         ...store,
         ...updateStoreDto,
-      });;
+      });
     }
 
     return store;
   }
- 
+
   remove(id: number) {
     return `This action removes a #${id} store`;
- 
   }
 
   /**
@@ -112,21 +130,21 @@ export class StoreService {
    * Retrieves either the top 5 or bottom 5 stores based on @param isTop.
    * @param isTop - Determines whether to retrieve top stores (true) or bottom stores (false).
    */
-  // async getTopOrBottomStores(isTop: IsBooleanPipes): Promise<Store[]> {
-  //   const order = isTop ? 'DESC' : 'ASC';
+  async getTopOrBottomStores(isTop: IsBooleanPipes): Promise<Store[]> {
+    const order = isTop ? 'DESC' : 'ASC';
 
-  //   const topStores = await this.storeRepo
-  //     .createQueryBuilder('store')
-  //     .leftJoinAndSelect('store.productInventories', 'productInventory')
-  //     .leftJoinAndSelect('productInventory.OrderItemDetail', 'orderItem')
-  //     .select('store.id', 'storeId')
-  //     .addSelect('store.storeName', 'storeName')
-  //     .addSelect('SUM(orderItem.price)', 'price')
-  //     .groupBy('store.id')
-  //     .orderBy('Price', order)
-  //     .limit(5)
-  //     .getRawMany();
+    const topStores = await this.storeRepo
+      .createQueryBuilder('Store')
+      .leftJoinAndSelect('Store.productInventories', 'productInventory')
+      .leftJoinAndSelect('productInventory.orderDetail', 'orderItem')
+      .select(['Store.id AS storeId', 'Store.storeName AS storeName'])
+      .addSelect('SUM(orderItem.price)', 'price')
+      .groupBy('Store.id')
+      .having('SUM(orderItem.price) > 0')
+      .orderBy('price', order)
+      .limit(5)
+      .getRawMany();
 
-  //   return topStores;
-  // }
-} 
+    return topStores;
+  }
+}

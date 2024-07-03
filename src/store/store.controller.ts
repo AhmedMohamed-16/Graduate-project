@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { StoreService } from './store.service';
 import { CreateStoreDto } from './dto/create-store.dto';
@@ -27,9 +28,14 @@ export class StoreController {
     return await this.storeService.create(createStoreDto);
   }
 
-  @Get()
-  findAll() {
-    return this.storeService.findAll();
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.storeService.findById(+id);
+  }
+
+  @Get(':name?')
+  async findAll(@Query('name')name?: string) {
+    return await this.storeService.findStoresByName(name);
   }
 
   @Patch(':id')
@@ -43,24 +49,18 @@ export class StoreController {
   }
 
   @Get('/total-count/:period')
- 
   async getTotalStoresCount(
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
     return await this.storeService.getTotalStoresCount(period);
  
   }
-
-  @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.storeService.findById(+id);
-  }
  
 
-  // @Get('/top-selling-stores/:isTop')
-  // async getTopOrBottomStores(
-  //   @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
-  // ): Promise<Store[]> {
-  //   return await this.storeService.getTopOrBottomStores(isTop);
-  // } 
+  @Get('/top-selling-stores/:isTop')
+  async getTopOrBottomStores(
+    @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
+  ): Promise<Store[]> {
+    return await this.storeService.getTopOrBottomStores(isTop);
+  } 
 }
