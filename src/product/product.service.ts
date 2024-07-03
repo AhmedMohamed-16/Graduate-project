@@ -179,4 +179,27 @@ export class ProductService {
 
     return products;
   }
+
+  async productDetailsOffers(id: number) { 
+    const  product = await this.productRepo.findOne({where:{id}  ,relations:['productInventories','productInventories.store']});
+     if (!product)
+      throw new NotFoundException(`Store with ID ${id} not found`);
+ 
+    
+  const result= product.productInventories.map(productInventory =>({
+    storeName: productInventory.store.storeName,
+    priceAfterOffer: productInventory.priceAfterOffer,
+    offerPercent:productInventory.offerPercent,
+   }));
+  return{ name: product.name,
+    concentration: product.activeIngredientInEachTablet + 'mg/ ' + product.unitsPerPackage + 'Tablets',
+    
+    publicPrice:  product.publicPrice,
+   
+    image: product.image, 
+    drugClass:product.therapeuticClass,
+    activeIngredient:product.activeIngredient,
+    offers:result
+  }
+}
 }

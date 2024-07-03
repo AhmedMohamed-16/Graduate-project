@@ -98,4 +98,8 @@ export class ProductController {
   async gitImage(@Query('imagName') name: string, @Res() res) {
     return  res.sendFile(join(process.cwd(), `${name}`));
   }
+  @Get('getproductDetailsOffers/:id')
+  async getproductDetailsOffers(@Param('id', ParseIntPipe) id: number): Promise<any>{
+    return await this.productService.productDetailsOffers(+id);
+  }
 }
