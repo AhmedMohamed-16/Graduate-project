@@ -27,9 +27,9 @@ export class StoreController {
     return await this.storeService.create(createStoreDto);
   }
 
-  @Get()
-  findAll() {
-    return this.storeService.findAll();
+  @Get(':name?')
+  async findAll(@Param('name')name?: string) {
+    return await this.storeService.findStoresByName(name);
   }
 
   @Patch(':id')

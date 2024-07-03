@@ -28,8 +28,29 @@ export class StoreService {
     return await this.storeRepo.save(newStore);
   }
 
-  async findAll() {
-    return await this.storeRepo.find();
+  /**
+   * Retrieve a list of stores, optionally filtered by store name.
+   *
+   * If a name is provided, the query filters stores whose names contain the given substring.
+   * eles if return all stores.
+   *
+   * @param name - Optional: The name or partial name of the store to filter by.
+   */
+  async findStoresByName(name: string) {
+    const query = this.storeRepo
+      .createQueryBuilder('Store')
+      .select([
+        'Store.id',
+        'Store.storeName',
+        'Store.contactNumber',
+        'Store.address',
+      ]);
+
+    if (name) {
+      query.andWhere('Store.storeName LIKE :name ', { name: `%${name}%` });
+    }
+
+    return await query.getRawMany();
   }
 
   async findById(id: number) {
