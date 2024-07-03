@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { StoreService } from './store.service';
 import { CreateStoreDto } from './dto/create-store.dto';
@@ -27,8 +28,13 @@ export class StoreController {
     return await this.storeService.create(createStoreDto);
   }
 
+  @Get(':id')
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return await this.storeService.findById(+id);
+  }
+
   @Get(':name?')
-  async findAll(@Param('name')name?: string) {
+  async findAll(@Query('name')name?: string) {
     return await this.storeService.findStoresByName(name);
   }
 
@@ -43,17 +49,11 @@ export class StoreController {
   }
 
   @Get('/total-count/:period')
- 
   async getTotalStoresCount(
     @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
   ): Promise<{ count: number; percentageChange: number }> {
     return await this.storeService.getTotalStoresCount(period);
  
-  }
-
-  @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return await this.storeService.findById(+id);
   }
  
 
