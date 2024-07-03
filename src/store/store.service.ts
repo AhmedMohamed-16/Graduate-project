@@ -47,13 +47,15 @@ export class StoreService {
       ]);
 
     if (name) {
-      query.andWhere('LOWER(Store.storeName) LIKE LOWER(:name) ', { name: `%${name}%` });
+      query.andWhere('LOWER(Store.storeName) LIKE LOWER(:name) ', {
+        name: `%${name}%`,
+      });
     }
 
     return await query.getRawMany();
   }
 
-  async findById(id: number) {
+  async findOne(id: number) {
     const existingStore = await this.storeRepo.findOneBy({ id });
 
     if (!existingStore)
@@ -61,12 +63,37 @@ export class StoreService {
     else return existingStore;
   }
 
+  async findById(id: number) {
+    const EisxistingStore = await this.findOne(id); 
+
+    const query = this.storeRepo
+      .createQueryBuilder('Store')
+      .select([
+        'Store.id AS id', 
+        'Store.storeName AS storeName',
+        'Store.userName  AS suerName',
+        'Store.isActive AS isActive',
+        'Store.email  AS email',
+        'Store.contactNumber AS contactNumber',
+        'Store.country AS country',
+        'Store.governorate AS governorate',
+        'Store.region AS region',
+        'Store.address AS address',
+        'Store.taxLicense AS taxLicense',
+        'Store.taxCard AS taxCard',
+        'Store.commercialRegister AS commercialRegister',
+      ])
+      .where('Store.id = :id', { id });
+
+    return query.getRawOne();
+  }
+
   async findByUserName(userName: string): Promise<Store | undefined> {
     return await this.storeRepo.findOne({ where: { userName: userName } });
   }
 
   async update(id: number, updateStoreDto: UpdateStoreDto) {
-    let store = await this.findById(id);
+    let store = await this.findOne(id);
 
     if (store) {
       // update the store instance with the new values
