@@ -90,9 +90,7 @@ export class ProductInventoryController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<ProductInventory> {
-    return await this.productInventoryService.findOne(+id);
+  async findById(@Param('id', ParseIntPipe) id: number): Promise<any> {
+    return await this.productInventoryService.findById(id);
   }
 }
