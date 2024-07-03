@@ -34,7 +34,7 @@ export class ProductInventoryService {
     const product = await this.productService.findById(
       createProductInventoryDto.productId,
     );
-    const store = await this.storeService.findById(
+    const store = await this.storeService.findOne(
       createProductInventoryDto.storeId,
     );
 

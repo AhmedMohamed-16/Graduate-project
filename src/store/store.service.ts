@@ -47,13 +47,15 @@ export class StoreService {
       ]);
 
     if (name) {
-      query.andWhere('LOWER(Store.storeName) LIKE LOWER(:name) ', { name: `%${name}%` });
+      query.andWhere('LOWER(Store.storeName) LIKE LOWER(:name) ', {
+        name: `%${name}%`,
+      });
     }
 
     return await query.getRawMany();
   }
 
-  async findById(id: number) {
+  async findOne(id: number) {
     const existingStore = await this.storeRepo.findOneBy({ id });
 
     if (!existingStore)
@@ -66,7 +68,7 @@ export class StoreService {
   }
 
   async update(id: number, updateStoreDto: UpdateStoreDto) {
-    let store = await this.findById(id);
+    let store = await this.findOne(id);
 
     if (store) {
       // update the store instance with the new values
