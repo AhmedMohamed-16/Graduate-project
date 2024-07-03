@@ -47,7 +47,7 @@ export class StoreService {
       ]);
 
     if (name) {
-      query.andWhere('Store.storeName LIKE :name ', { name: `%${name}%` });
+      query.andWhere('LOWER(Store.storeName) LIKE LOWER(:name) ', { name: `%${name}%` });
     }
 
     return await query.getRawMany();
