@@ -199,7 +199,7 @@ export class StoreService {
    }));
   
 }
-}
+
   async getTopOrBottomStores(isTop: IsBooleanPipes): Promise<Store[]> {
     const order = isTop ? 'DESC' : 'ASC';
 

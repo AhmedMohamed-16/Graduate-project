@@ -532,7 +532,7 @@ export class OrderService {
       console.error('An error occurred while counting the orders:', error);
     }
   }
-}
+
 async getMostSoldProductInventory(location: string): Promise<any[]> {
 
   const query = await this.orderRepository.createQueryBuilder('order')
@@ -863,7 +863,7 @@ async findOrdersforOnePharmacy_OrdersPage(id: number,state:string) {
 });
     
     return {...result};
-
+}
   async getOrdersByStoreId(storeId: number) {
     const store = await this.storeService.findOne(storeId);
 
