@@ -13,6 +13,7 @@ import {
   UsePipes,
   Query,
   Res,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -102,4 +103,19 @@ export class ProductController {
   async getproductDetailsOffers(@Param('id', ParseIntPipe) id: number): Promise<any>{
     return await this.productService.productDetailsOffers(+id);
   }
+  @Post('getproductDetailsSimilar/')
+  async getproductDetailsSimilar(  @Body('drugClass')drugClass:any): Promise<any>{
+    console.log(drugClass)
+    return await this.productService.getproductDetailsSimilar(drugClass);
+  }
+  @Post('getproductDetailsAlternative/')
+  async getproductDetailsAlternative(@Body("activeIngredient") activeIngredient:any): Promise<any>{
+    return await this.productService.getproductDetailsAlternative(activeIngredient);
+  }
+
+
+
 }
+
+
+
