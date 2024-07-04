@@ -40,8 +40,11 @@ export class PharmacistService {
     return `This action returns all pharmacist`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pharmacist`;
+  async findOne(licenseNumber: string) {
+     const pharmacist= await this.pharmacistRepo.findOne({ where: { licenseNumber } ,relations:['pharmacies']});
+
+    return pharmacist;
+
   }
 
   async findByLicenseNumber(licenseNumber: string) {

@@ -44,11 +44,13 @@ export class PharmacyController {
   remove(@Param('id') id: string) {
     return this.pharmacyService.remove(+id);
   }
- 
-   
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pharmacyService.findOne(+id);
+  } 
+  @Get('/customeFindOne/:id')
+  customeFindOne(@Param('id') id: string) {
+    return this.pharmacyService.customefindOne(+id);
   } 
   @Get('/total-count/:period')
   async getTotalPharmaciesCount(

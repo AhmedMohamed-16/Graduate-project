@@ -76,7 +76,38 @@ export class OrderController {
   async getHotDeals() {
      return await this.productInventoryService.getHotDeals();
   }
+  @Get('/dashboard/:id/:month/:year')
+  async getMonthYear(@Param('id') id:string,@Param('month') month:string,@Param('year') year:string) {
 
+
+    const MostBoughtItems=await this.orderService.getMostSolditemsForOnePharmacy(+id)
+    const pharmacistPublicPrice=await this.orderService.dashboardTotalpharmacistPublicPrice(+id);
+
+    const pharmacistPrice=await this.orderService.dashboardTotalpharmacistPrice(+id);
+
+    const   AverageItemDescount=await this.orderService.dashboardTotalAverageItemDescount(+id,month,year);
+
+    
+    const   TotalItemBought=await this.orderService.dashboardTotalItemBought(+id,month,year);
+
+    
+    const   TotalUnitsBought=await this.orderService.dashboardTotalUnitsBought(+id,month,year);
+
+
+       const   TotalOrders=await this.orderService.dashboardTotalOrders(+id,month,year);
+
+        return{DateChoose:{AverageItemDescount,TotalOrders, TotalItemBought,TotalUnitsBought},pharmacistPrice_vs_publicPrice:{pharmacistPrice,pharmacistPublicPrice},MostBoughtItems:{MostBoughtItems}}
+  }
+
+  @Get('OrdersPage/:id')
+  async findOrdersforOnePharmacy_OrdersPage(@Param('id',ParseIntPipe) id: number) {
+   const curr_orders=await  this.orderService.findOrdersforOnePharmacy_OrdersPage(id,'current');
+   const prev_orders=await  this.orderService.findOrdersforOnePharmacy_OrdersPage(id,'prev');
+
+     return{curr_orders,prev_orders}
+  }
+
+  
   @Get(':id')
   findOneOrder(@Param('id',ParseIntPipe) id: number) {
     return this.orderService.findOne(id); 
