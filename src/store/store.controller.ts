@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { StoreService } from './store.service';
 import { CreateStoreDto } from './dto/create-store.dto';
@@ -41,9 +42,20 @@ export class StoreController {
     return await this.storeService.findStoresByName(name);
   }
 
+  @Patch('status')
+  async updateStatus(
+    @Body('id', ParseIntPipe) id: number,
+    @Body('status', ParseBoolPipe) status: boolean,
+  ) {
+    return await this.storeService.updateStatus(id, status);
+  }
+
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStoreDto: UpdateStoreDto) {
-    return this.storeService.update(+id, updateStoreDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateStoreDto: UpdateStoreDto,
+  ) {
+    return await this.storeService.update(+id, updateStoreDto);
   }
 
   @Delete(':id')

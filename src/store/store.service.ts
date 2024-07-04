@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { Store } from './entities/store.entity';
@@ -64,12 +68,12 @@ export class StoreService {
   }
 
   async findById(id: number) {
-    const EisxistingStore = await this.findOne(id); 
+    const EisxistingStore = await this.findOne(id);
 
     const query = this.storeRepo
       .createQueryBuilder('Store')
       .select([
-        'Store.id AS id', 
+        'Store.id AS id',
         'Store.storeName AS storeName',
         'Store.userName  AS suerName',
         'Store.isActive AS isActive',
@@ -173,5 +177,21 @@ export class StoreService {
       .getRawMany();
 
     return topStores;
+  }
+
+  async updateStatus(id: number, status: boolean): Promise<Store> {
+    const isExistingStore = await this.findOne(id);
+
+    if (isExistingStore.isActive == status) {
+      const currentStatus = status ? 'Active' : 'Inactive';
+      throw new ConflictException(
+        `the store with id ${id} already ${currentStatus}`,
+      );
+    }
+
+    isExistingStore.isActive = status;
+    await this.storeRepo.save(isExistingStore);
+
+    return isExistingStore;
   }
 }
