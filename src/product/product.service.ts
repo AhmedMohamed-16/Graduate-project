@@ -89,6 +89,7 @@ export class ProductService {
     // if (result.affected == 0)
     //   throw new NotFoundException(`product with id ${id} not found`);
   }
+  
   /**
    * this method to check if the product allready exists or not before add new one
    */

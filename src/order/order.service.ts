@@ -524,6 +524,12 @@ export class OrderService {
     }
   }
 
+  /**
+   * Retrieve orders associated with a specific store by store ID.
+   *
+   * @param storeId - The ID of the store.
+   * @return An array of grouped orders.
+   */
   async getOrdersByStoreId(storeId: number) {
     const store = await this.storeService.findOne(storeId);
 
@@ -551,5 +557,56 @@ export class OrderService {
       }));
 
     return groupedOrders;
+  }
+
+  /**
+   * Retrieve the number of orders for a specific store within a given period and calculate
+   * the rate of change in the number of orders compared to the previous equivalent period
+   * @param storeId - The ID of the store.
+   * @param period - The desired period (day, week, month, year).
+   * @returns An object containing current period orders, previous period orders, and change rate.
+   */
+  async getStoreOrderStatistics(storeId: number, period: AllowedPeriods) {
+    const isExistingStore = await this.storeService.findOne(storeId);
+
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = CalculationsHelper.calculateDateRanges(period);
+
+    const currentPeriodOrders = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoin('order.ordersDetail', 'orderDetail')
+      .leftJoin('orderDetail.productInventory', 'productInventory')
+      .where('productInventory.storeId = :storeId', { storeId })
+      .andWhere('order.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: currentStartDate,
+        endDate: currentEndDate,
+      })
+      .getCount();
+
+    const previousPeriodOrders = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoin('order.ordersDetail', 'orderDetail')
+      .leftJoin('orderDetail.productInventory', 'productInventory')
+      .where('productInventory.storeId = :storeId', { storeId })
+      .andWhere('order.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: previousStartDate,
+        endDate: previousEndDate,
+      })
+      .getCount();
+
+    const changeRate = CalculationsHelper.calculatePercentageChange(
+      currentPeriodOrders,
+      previousPeriodOrders,
+    );
+
+    return {
+      currentPeriodOrders,
+      previousPeriodOrders,
+      changeRate,
+    };
   }
 }

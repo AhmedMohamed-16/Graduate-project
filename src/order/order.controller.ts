@@ -48,6 +48,14 @@ export class OrderController {
     return await this.orderService.getOrdersByStoreId(storeId);
   }
 
+  @Get('store/statstics/:storeId/:period')
+  async getStoreOrderStatistics(
+    @Param('storeId') storeId: number,
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ) {
+    return this.orderService.getStoreOrderStatistics(storeId, period);
+  }
+
   @Get()
   findAllOrders() {
     return this.orderService.findAll();
