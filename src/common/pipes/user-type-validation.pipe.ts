@@ -100,7 +100,8 @@ export class ProductInventoryFilerPip implements PipeTransform {
     productId: number;
   } {
     const productId = value.productId;
-    const miniOffer = value.miniOffer !== undefined ? value.miniOffer : undefined;
+    const miniOffer =
+      value.miniOffer !== undefined ? value.miniOffer : undefined;
     const maxOffer = value.maxOffer !== undefined ? value.maxOffer : undefined;
 
     if (
@@ -126,5 +127,17 @@ export class ProductInventoryFilerPip implements PipeTransform {
       throw new NotFoundException('productId is Should be provided');
     }
     return { miniOffer, maxOffer, productId };
+  }
+}
+
+export class ParseBoolPipe implements PipeTransform {
+  transform(value: any) {
+    if (value === 'true' || value === true) {
+      return true;
+    } else if (value === 'false' || value === false) {
+      return false;
+    } else {
+      throw new BadRequestException(`Invalid boolean value: ${value}`);
+    }
   }
 }
