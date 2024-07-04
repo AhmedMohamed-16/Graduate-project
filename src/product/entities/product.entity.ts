@@ -31,8 +31,11 @@ export class Product {
   @Column({ nullable: false })
   unitsPerPackage: number; // Number of tablets or ampoules per box
 
+  
+  @Column({ nullable: true ,default:500})
+  activeIngredientInEachTablet: number;//    activeIngredientInEachTablet:number+' mg' column
+  
   @Column({ nullable: false })
- 
   companyName: string;
  
   // Optional columns

@@ -6,7 +6,7 @@ import {
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { CategoryService } from 'src/category/category.service';
@@ -180,4 +180,76 @@ export class ProductService {
 
     return products;
   }
+
+  async productDetailsOffers(id: number) { 
+    const  product = await this.productRepo.findOne({where:{id}  ,relations:['productInventories','productInventories.store']});
+     if (!product)
+      throw new NotFoundException(`product with ID ${id} not found`);
+ 
+    
+  const result= product.productInventories.map(productInventory =>({
+    storeName: productInventory.store.storeName,
+    priceAfterOffer: productInventory.priceAfterOffer,
+    offerPercent:productInventory.offerPercent,
+   }));
+  return{ name: product.name,
+    concentration: product.activeIngredientInEachTablet + 'mg/ ' + product.unitsPerPackage + 'Tablets',
+    
+    publicPrice:  product.publicPrice,
+   
+    image: product.image, 
+    drugClass:product.therapeuticClass,
+    activeIngredient:product.activeIngredient,
+    offers:result
+  }
+}
+
+async getproductDetailsSimilar(drugClass: any): Promise<any> {
+  const products = await this.productRepo.find({
+    where: { therapeuticClass: drugClass },
+    relations: ['productInventories', 'productInventories.store'],
+  });
+
+  if (!products || products.length === 0) {
+    throw new NotFoundException(`Products with drug classes ${drugClass.join(', ')} not found`);
+  }
+
+  const res = products.flatMap((product) =>
+    product.productInventories.map((productinv) => ({
+      productInventory_id: productinv.id,
+      name: product.name,
+      tablets: product.activeIngredientInEachTablet + 'mg/ ' + product.unitsPerPackage + 'Tablets',
+      storeName: productinv.store.storeName,
+      publicPrice: product.publicPrice,
+      priceAfterOffer: productinv.priceAfterOffer,
+      offerPercent: productinv.offerPercent,
+      image: product.image, // Convert image path to URL
+    })),
+  );
+
+  return res;
+}
+async getproductDetailsAlternative(activeIngredient: any){
+  const products = await this.productRepo.find({
+    where: { activeIngredient: activeIngredient },
+    relations: ['productInventories', 'productInventories.store'],
+  }); 
+  if (!products || products.length === 0)
+   throw new NotFoundException(`products with activeIngredient ${activeIngredient} not found`);
+
+  const res = products.flatMap((product) =>
+    product.productInventories.map((productinv) => ({
+      productInventory_id: productinv.id,
+      name: product.name,
+      tablets: product.activeIngredientInEachTablet + 'mg/ ' + product.unitsPerPackage + 'Tablets',
+      storeName: productinv.store.storeName,
+      publicPrice: product.publicPrice,
+      priceAfterOffer: productinv.priceAfterOffer,
+      offerPercent: productinv.offerPercent,
+      image: product.image, // Convert image path to URL
+   })),
+  );
+
+  return res;
+}
 }

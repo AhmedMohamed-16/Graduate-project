@@ -27,10 +27,15 @@ import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
 import { Pharmacy } from 'src/pharmacy/entities/pharmacy.entity';
 import { StatusOrder } from 'src/common/enums/status-order.enum';
-
+import { join } from 'path'
+import { ProductInventoryService } from 'src/product-inventory/product-inventory.service';
 @Controller('orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+
+  constructor(private readonly orderService: OrderService,
+    private readonly  productInventoryService: ProductInventoryService
+   ) {}
+
 
   @UseGuards(JwtAuthGaurd, RoleGuard)
   @Roles(UserType.PHARMACY)
@@ -59,13 +64,6 @@ export class OrderController {
   @Get()
   findAllOrders() {
     return this.orderService.findAll();
-  }
-  @Get('/:date/:state')
-  findAllOrders_filterByDateState(
-    @Param('date') date: string,
-    @Param('state') state: StatusOrder,
-  ) {
-    return this.orderService.filterByDateState(date, state);
   }
 
   @Get('/get-latest') //for orders
@@ -97,7 +95,51 @@ export class OrderController {
   ): Promise<{ cost: number; percentageChange: number }> {
     return await this.orderService.getTotalBayingForOnePharmacy(id, period);
   }
+  @Get('/mostSelling/:region')
+  mostSelling(@Param('region') region:string
+    , @Res() res) {
+       
+      const result=this.orderService.getMostSoldProductInventory(region);
+      return {result,image:res.sendFile(join(process.cwd(), `uploads/${name}`))};
+  }
+   
+  
+  @Get('/HotDeals')
+  async getHotDeals() {
+     return await this.productInventoryService.getHotDeals();
+  }
+  @Get('/dashboard/:id/:month/:year')
+  async getMonthYear(@Param('id') id:string,@Param('month') month:string,@Param('year') year:string) {
 
+
+    const MostBoughtItems=await this.orderService.getMostSolditemsForOnePharmacy(+id)
+    const pharmacistPublicPrice=await this.orderService.dashboardTotalpharmacistPublicPrice(+id);
+
+    const pharmacistPrice=await this.orderService.dashboardTotalpharmacistPrice(+id);
+
+    const   AverageItemDescount=await this.orderService.dashboardTotalAverageItemDescount(+id,month,year);
+
+    
+    const   TotalItemBought=await this.orderService.dashboardTotalItemBought(+id,month,year);
+
+    
+    const   TotalUnitsBought=await this.orderService.dashboardTotalUnitsBought(+id,month,year);
+
+
+       const   TotalOrders=await this.orderService.dashboardTotalOrders(+id,month,year);
+
+        return{DateChoose:{AverageItemDescount,TotalOrders, TotalItemBought,TotalUnitsBought},pharmacistPrice_vs_publicPrice:{pharmacistPrice,pharmacistPublicPrice},MostBoughtItems:{MostBoughtItems}}
+  }
+
+  @Get('OrdersPage/:id')
+  async findOrdersforOnePharmacy_OrdersPage(@Param('id',ParseIntPipe) id: number) {
+   const curr_orders=await  this.orderService.findOrdersforOnePharmacy_OrdersPage(id,'current');
+   const prev_orders=await  this.orderService.findOrdersforOnePharmacy_OrdersPage(id,'prev');
+
+     return{curr_orders,prev_orders}
+  }
+
+  
   @Get(':id')
   findOneOrder(@Param('id', ParseIntPipe) id: number) {
     return this.orderService.findOne(id);
@@ -116,4 +158,10 @@ export class OrderController {
   remove(@Param('id') id: string) {
     return this.orderService.remove(+id);
   }
+  @Get('/:date/:state')
+  findAllOrders_filterByDateState(@Param('date') date:string,@Param('state') state:StatusOrder) {
+    return this.orderService.filterByDateState(date,state);
+  }
+  
+
 }

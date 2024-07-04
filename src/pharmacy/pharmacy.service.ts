@@ -45,9 +45,16 @@ export class PharmacyService {
   async findAll() {
     return  await this.pharmacyRepo.find();
   }
+  async findOne(id: number) { 
+    const pharmacy= await this.pharmacyRepo.findOne({ where:{id},relations:['pharmacist'] }) ;
+return pharmacy
+  }
 
-  findOne(id: number) { 
-    return this.pharmacyRepo.findOneBy({ id }) 
+ async customefindOne(id: number) { 
+    const pharmacy= await this.pharmacyRepo.findOne({ where:{id},relations:['pharmacist'] }) ;
+return {BasicDetails:{photo:pharmacy.pharmacyPhoto, name:pharmacy.pharmacyName, country:pharmacy.country,governotate:pharmacy.governorate,region:pharmacy.region,address:pharmacy.address,contactNumber:pharmacy.contactNumber},
+PharmacistDetails:{firstName:pharmacy.pharmacist.firstName,lastName:pharmacy.pharmacist.lastName,email:pharmacy.pharmacist.email,phoneNumber:pharmacy.pharmacist.phoneNumber},
+securityDetails:{userName:pharmacy.userName,password:pharmacy.password},}  
   }
   findMany(ids: number[]) {
     return this.pharmacyRepo.findBy({ id: In(ids) });

@@ -12,6 +12,8 @@ import {
   ParseIntPipe,
   UsePipes,
   Query,
+  Res,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -26,7 +28,7 @@ import {
   ProductFilterPipe,
 } from 'src/common/pipes/user-type-validation.pipe';
 import { ProductFiltersDto } from 'src/product-inventory/dto/product-filter.dto';
-
+import {join} from 'path'
 @ApiTags('Product')
 @Controller('products')
 export class ProductController {
@@ -93,4 +95,27 @@ export class ProductController {
   ) {
     return await this.productService.getTopOrBottomProductsByDemand(isTop);
   }
+  @Get('getImage')
+  async gitImage(@Query('imagName') name: string, @Res() res) {
+    return  res.sendFile(join(process.cwd(), `${name}`));
+  }
+  @Get('getproductDetailsOffers/:id')
+  async getproductDetailsOffers(@Param('id', ParseIntPipe) id: number): Promise<any>{
+    return await this.productService.productDetailsOffers(+id);
+  }
+  @Post('getproductDetailsSimilar/')
+  async getproductDetailsSimilar(  @Body('drugClass')drugClass:any): Promise<any>{
+    console.log(drugClass)
+    return await this.productService.getproductDetailsSimilar(drugClass);
+  }
+  @Post('getproductDetailsAlternative/')
+  async getproductDetailsAlternative(@Body("activeIngredient") activeIngredient:any): Promise<any>{
+    return await this.productService.getproductDetailsAlternative(activeIngredient);
+  }
+
+
+
 }
+
+
+

@@ -33,6 +33,11 @@ export class CreateProductDto {
   unitsPerPackage: number;
 
   @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  activeIngredientInEachTablet?: number;
+
+  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   companyName: string;
