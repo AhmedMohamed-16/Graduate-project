@@ -34,7 +34,7 @@ export class ProductInventoryService {
     const product = await this.productService.findById(
       createProductInventoryDto.productId,
     );
-    const store = await this.storeService.findById(
+    const store = await this.storeService.findOne(
       createProductInventoryDto.storeId,
     );
 
@@ -66,7 +66,7 @@ export class ProductInventoryService {
 
   /**
    * Retrieves the inventory of a specific product across each store separately.
-   * 
+   *
    * @param  productId - Mandatory: The ID of the product.
    * @param  miniOffer - Optional: Minimum offer percentage filter.
    * @param  maxOffer  - Optional: Maximum offer percentage filter.
@@ -162,9 +162,46 @@ export class ProductInventoryService {
     });
 
     if (!existingProductInventory) {
-      throw new NotFoundException('Product not found in inventory list');
+      throw new NotFoundException(
+        `ProductInvntory with id ${id} not found in inventory list`,
+      );
     }
     return existingProductInventory;
+  }
+
+  /**
+   * Retrieve detailed information about a specific productInventory by its ID.
+   * This includes product details, category, store information, and inventory-specific fields.
+   *
+   * @param  id - The ID of the product inventory to retrieve.
+   * @returns   - A promise that resolves to an object containing detailed product inventory information.
+   * @throws {NotFoundException} - If the product inventory with the specified ID does not exist.
+   */
+  async findById(id: number): Promise<any> {
+    const existingProductInventory = await this.findOne(id);
+
+    const query = this.productInventoryRepo
+      .createQueryBuilder('ProductInventory')
+      .leftJoinAndSelect('ProductInventory.product', 'product')
+      .leftJoinAndSelect('ProductInventory.store', 'store')
+      .leftJoinAndSelect('product.category', 'category')
+      .select([
+        'product.name AS productName',
+        'product.image AS productImage',
+        'category.name AS categoryName',
+        'product.unitsPerPackage AS productUnitsPerPackage',
+        'product.publicPrice AS productPublicPrice',
+        'product.companyName AS productCompanyName',
+        'product.therapeuticClass AS productTherapeuticClass',
+        'product.activeIngredient AS productActiveIngredient',
+        'store.storeName AS storeName',
+        'ProductInventory.amount AS inventoryAmount',
+        'ProductInventory.offerPercent AS inventoryOfferPercent',
+        'ProductInventory.priceAfterOffer AS inventoryPriceAfterOffer',
+      ])
+      .where('ProductInventory.id = :id', { id });
+
+    return await query.getRawOne();
   }
 
   async update(
