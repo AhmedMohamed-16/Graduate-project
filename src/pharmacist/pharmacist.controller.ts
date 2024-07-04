@@ -20,11 +20,10 @@ export class PharmacistController {
     return this.pharmacistService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pharmacistService.findOne(+id);
+  @Get(':licenseNumber')
+  findOne(@Param('licenseNumber') licenseNumber: string) {
+    return this.pharmacistService.findOne(licenseNumber);
   }
-
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePharmacistDto: UpdatePharmacistDto) {
     return this.pharmacistService.update(+id, updatePharmacistDto);

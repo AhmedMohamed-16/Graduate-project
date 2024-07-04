@@ -76,4 +76,15 @@ export class StoreController {
   ): Promise<Store[]> {
     return await this.storeService.getTopOrBottomStores(isTop);
   }
+  @Get('customFindById/:id')
+  async customFindById(@Param('id', ParseIntPipe) id: number) {
+    return await this.storeService.customFindById(+id);
+  }
+  // @Get('/top-selling-stores/:isTop')
+  // async getTopOrBottomStores(
+  //   @Param('isTop', IsBooleanPipes) isTop: IsBooleanPipes,
+  // ): Promise<Store[]> {
+  //   return await this.storeService.getTopOrBottomStores(isTop);
+  // } 
+
 }
