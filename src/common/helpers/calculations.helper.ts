@@ -84,7 +84,6 @@ export class CalculationsHelper {
     currentCount: number,
     previousCount: number,
   ): number {
-    console.log(currentCount, previousCount);
     if (currentCount == 0 && previousCount === 0) {
       return 0;
     } else if (previousCount == 0 && currentCount > 0) {
