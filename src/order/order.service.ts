@@ -19,13 +19,14 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import { ProductInventory } from 'src/product-inventory/entities/product-inventory.entity';
 import { AllowedPeriods } from 'src/common/enums/allowed-periods.enum';
 
-import { CalculationsHelper } from 'src/common/helpers/calculations.helper';import {
+import { CalculationsHelper } from 'src/common/helpers/calculations.helper';
+import {
   startOfMonth,
   endOfMonth,
   startOfYear,
   endOfYear,
   subYears,
-  subMonths, 
+  subMonths,
 } from 'date-fns';
 import { IsBooleanPipes } from 'src/common/pipes/user-type-validation.pipe';
 import { StoreService } from 'src/store/store.service';
@@ -533,339 +534,454 @@ export class OrderService {
     }
   }
 
-async getMostSoldProductInventory(location: string): Promise<any[]> {
-
-  const query = await this.orderRepository.createQueryBuilder('order')
+  async getMostSoldProductInventory(location: string): Promise<any[]> {
+    const query = await this.orderRepository
+      .createQueryBuilder('order')
       .innerJoin('order.pharmacy', 'pharmacy')
       .innerJoin('order.ordersDetail', 'ordersDetail')
       .innerJoin('ordersDetail.productInventory', 'productInventory')
       .innerJoin('productInventory.product', 'product')
       .innerJoin('productInventory.store', 'store')
-      .where('pharmacy.address ILIKE :location OR pharmacy.region ILIKE :location OR pharmacy.governorate ILIKE :location OR pharmacy.country ILIKE :location', { location: `%${location}%` })
+      .where(
+        'pharmacy.address ILIKE :location OR pharmacy.region ILIKE :location OR pharmacy.governorate ILIKE :location OR pharmacy.country ILIKE :location',
+        { location: `%${location}%` },
+      )
       .select([
-          'product.image AS image',
-          'product.name AS name',
-          'product.unitsPerPackage AS tablets',
-          'product.activeIngredientInEachTablet AS activeIngredientInEachTablet',
-          'product.publicPrice AS publicPrice',
-          'productInventory.offerPercent AS offerPercent',
-          'productInventory.priceAfterOffer AS priceAfterOffer',
-          'store.storeName AS storeName'
+        'product.image AS image',
+        'product.name AS name',
+        'product.unitsPerPackage AS tablets',
+        'product.activeIngredientInEachTablet AS activeIngredientInEachTablet',
+        'product.publicPrice AS publicPrice',
+        'productInventory.offerPercent AS offerPercent',
+        'productInventory.priceAfterOffer AS priceAfterOffer',
+        'store.storeName AS storeName',
       ])
       .addSelect('SUM(ordersDetail.quantity)', 'totalQuantity')
-      .groupBy('productInventory.id, product.image, product.name, product.unitsPerPackage, product.activeIngredientInEachTablet, product.publicPrice, productInventory.offerPercent, productInventory.priceAfterOffer, store.storeName')
+      .groupBy(
+        'productInventory.id, product.image, product.name, product.unitsPerPackage, product.activeIngredientInEachTablet, product.publicPrice, productInventory.offerPercent, productInventory.priceAfterOffer, store.storeName',
+      )
       .having('productInventory.amount > 0')
       .orderBy('SUM(ordersDetail.quantity)', 'DESC')
       .getRawMany();
 
-  console.log(query); // Log the query result
-   
-  const result = query.map(event => ({
+    console.log(query); // Log the query result
+
+    const result = query.map((event) => ({
       name: event.name,
-      tablets: event.activeingredientineachtablet + 'mg/ ' + event.tablets + 'Tablets',
+      tablets:
+        event.activeingredientineachtablet + 'mg/ ' + event.tablets + 'Tablets',
       storeName: event.storename,
       publicPrice: event.publicprice,
       priceAfterOffer: event.priceafteroffer,
       offerPercent: event.offerpercent,
       image: event.image, // Convert image path to URL
-  }));
+    }));
 
-  console.log(result); // Log the mapped result
-  return result;
-}
-async dashboardTotalOrders(id:number,month:string,year:string){
-  //convert charachter of month into number of month
-  const {currentStartDate,currentEndDate,previousStartDate,previousEndDate}=this.getComparingDate(month,year);
- const whereCurrent =  { pharmacy: {id:id}, createdAt: Between(currentStartDate, currentEndDate) };
-      const wherePrevious =  { pharmacy: {id:id}, createdAt: Between(previousStartDate, previousEndDate) };
-    
-        const [currentCount, previousCount] = await Promise.all([
-        this.orderRepository.count({
-          where:  whereCurrent ,
-        }),
-        this.orderRepository.count({
-          where: wherePrevious,
-        }),
-      ]);
-     
-    
-      // Calculate the percentage change between the current and previous counts
-      const percentageChange: number =
-        CalculationsHelper.calculatePercentageChange(
-          currentCount,
-          previousCount,
-        );
-      return { count: currentCount, percentageChange };
-      } 
+    console.log(result); // Log the mapped result
+    return result;
+  }
+  async dashboardTotalOrders(id: number, month: string, year: string) {
+    //convert charachter of month into number of month
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = this.getComparingDate(month, year);
+    const whereCurrent = {
+      pharmacy: { id: id },
+      createdAt: Between(currentStartDate, currentEndDate),
+    };
+    const wherePrevious = {
+      pharmacy: { id: id },
+      createdAt: Between(previousStartDate, previousEndDate),
+    };
 
+    const [currentCount, previousCount] = await Promise.all([
+      this.orderRepository.count({
+        where: whereCurrent,
+      }),
+      this.orderRepository.count({
+        where: wherePrevious,
+      }),
+    ]);
 
- //cut year from month and add year for month 
+    // Calculate the percentage change between the current and previous counts
+    const percentageChange: number =
+      CalculationsHelper.calculatePercentageChange(currentCount, previousCount);
+    return { count: currentCount, percentageChange };
+  }
 
- 
-//   currentEndDate = endOfMonth(new Date());
-//   previousStartDate = startOfMonth(subMonths(new Date(), 1)); // Previous month
-//   previousEndDate = endOfMonth(subMonths(new Date(), 1));
-//   break;
-// case AllowedPeriods.YEAR:
-//   currentStartDate = startOfYear(new Date());
-//   currentEndDate = endOfYear(new Date());
-//   previousStartDate = startOfYear(subYears(new Date(), 1)); // Previous year
-//   previousEndDate = endOfYear(subYears(new Date(), 1));
+  //cut year from month and add year for month
 
- async dashboardTotalAverageItemDescount(id:number,month:string,year:string){
+  //   currentEndDate = endOfMonth(new Date());
+  //   previousStartDate = startOfMonth(subMonths(new Date(), 1)); // Previous month
+  //   previousEndDate = endOfMonth(subMonths(new Date(), 1));
+  //   break;
+  // case AllowedPeriods.YEAR:
+  //   currentStartDate = startOfYear(new Date());
+  //   currentEndDate = endOfYear(new Date());
+  //   previousStartDate = startOfYear(subYears(new Date(), 1)); // Previous year
+  //   previousEndDate = endOfYear(subYears(new Date(), 1));
 
-  const {currentStartDate,currentEndDate,previousStartDate,previousEndDate}=this.getComparingDate(month,year);
-  
-  let currentDateresult = await this.orderRepository.createQueryBuilder('order')
-  .innerJoin('order.pharmacy', 'pharmacy')
-  .innerJoin('order.ordersDetail', 'orderDetail')
-  .innerJoin('orderDetail.productInventory', 'productInventory')
-  .select(' AVG(productInventory.offerPercent)', 'averageItemDescount') 
-  .where('pharmacy.id=:id',{id:id})
-  .andWhere('order.createdAt BETWEEN :currentStartDate AND :currentEndDate', { currentStartDate, currentEndDate })
-  .getRawOne();
-  let previousDateresult = await this.orderRepository.createQueryBuilder('order')
-  .innerJoin('order.pharmacy', 'pharmacy')
-  .innerJoin('order.ordersDetail', 'orderDetail')
-  .innerJoin('orderDetail.productInventory', 'productInventory')
-  .select(' AVG(productInventory.offerPercent)', 'averageItemDescount') 
-  .where('pharmacy.id=:id',{id:id})
-  .andWhere('order.createdAt BETWEEN :previousStartDate AND :previousEndDate', { previousStartDate, previousEndDate })
-  .getRawOne();
+  async dashboardTotalAverageItemDescount(
+    id: number,
+    month: string,
+    year: string,
+  ) {
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = this.getComparingDate(month, year);
 
- if( currentDateresult.averageItemDescount==null){
-  currentDateresult.averageItemDescount=0;
- }
- if(previousDateresult.averageItemDescount==null){
-  previousDateresult.averageItemDescount=0;
- }
-   const percentageChange: number =
-        CalculationsHelper.calculatePercentageChange(
-          currentDateresult.averageItemDescount,
-          previousDateresult.averageItemDescount,
-        );
-      return { averageItemDescount: currentDateresult.averageItemDescount+' %', percentageChange };
-      }
-// const query = await this.orderRepository.createQueryBuilder('order')
-// .innerJoin('order.pharmacy', 'pharmacy')
-// .innerJoin('order.ordersDetail', 'ordersDetail')
-// .innerJoin('ordersDetail.productInventory', 'productInventory')
-// .innerJoin('productInventory.product', 'product')
-// .innerJoin('productInventory.store', 'store')
-// .where('pharmacy.address ILIKE :location OR pharmacy.region ILIKE :location OR pharmacy.governorate ILIKE :location OR pharmacy.country ILIKE :location', { location: `%${location}%` })
-// .select([
-//     'product.image AS image',
-//     'product.name AS name',
-//     'product.unitsPerPackage AS tablets',
-//     'product.activeIngredientInEachTablet AS activeIngredientInEachTablet',
-//     'product.publicPrice AS publicPrice',
-//     'productInventory.offerPercent AS offerPercent',
-//     'productInventory.priceAfterOffer AS priceAfterOffer',
-//     'store.storeName AS storeName'
-// ])
-// .addSelect('SUM(ordersDetail.quantity)', 'totalQuantity')
-// .groupBy('productInventory.id, product.image, product.name, product.unitsPerPackage, product.activeIngredientInEachTablet, product.publicPrice, productInventory.offerPercent, productInventory.priceAfterOffer, store.storeName')
-// .having('productInventory.amount > 0')
-// .orderBy('SUM(ordersDetail.quantity)', 'DESC')
-// .getRawMany();
+    let currentDateresult = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.pharmacy', 'pharmacy')
+      .innerJoin('order.ordersDetail', 'orderDetail')
+      .innerJoin('orderDetail.productInventory', 'productInventory')
+      .select(' AVG(productInventory.offerPercent)', 'averageItemDescount')
+      .where('pharmacy.id=:id', { id: id })
+      .andWhere(
+        'order.createdAt BETWEEN :currentStartDate AND :currentEndDate',
+        { currentStartDate, currentEndDate },
+      )
+      .getRawOne();
+    let previousDateresult = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.pharmacy', 'pharmacy')
+      .innerJoin('order.ordersDetail', 'orderDetail')
+      .innerJoin('orderDetail.productInventory', 'productInventory')
+      .select(' AVG(productInventory.offerPercent)', 'averageItemDescount')
+      .where('pharmacy.id=:id', { id: id })
+      .andWhere(
+        'order.createdAt BETWEEN :previousStartDate AND :previousEndDate',
+        { previousStartDate, previousEndDate },
+      )
+      .getRawOne();
 
-async dashboardTotalItemBought(id:number,month:string,year:string){
-
-  const {currentStartDate,currentEndDate,previousStartDate,previousEndDate}=this.getComparingDate(month,year);
-  
-  let currentDateresult = await this.orderRepository.createQueryBuilder('order')
-  .innerJoin('order.pharmacy', 'pharmacy')
-  .innerJoin('order.ordersDetail', 'orderDetail') 
-  .select(' COUNT(orderDetail.id)', 'TotalItemBought') 
-  .where('pharmacy.id=:id',{id:id})
-  .andWhere('order.createdAt BETWEEN :currentStartDate AND :currentEndDate', { currentStartDate, currentEndDate })
-  .getRawOne();
-  let previousDateresult = await this.orderRepository.createQueryBuilder('order')
-  .innerJoin('order.pharmacy', 'pharmacy')
-  .innerJoin('order.ordersDetail', 'orderDetail') 
-  .select(' COUNT(orderDetail.id)', 'TotalItemBought') 
-  .where('pharmacy.id=:id',{id:id})
-  .andWhere('order.createdAt BETWEEN :previousStartDate AND :previousEndDate', { previousStartDate, previousEndDate })
-  .getRawOne();
-
- if( currentDateresult.TotalItemBought==null){
-  currentDateresult.TotalItemBought=0;
- }
- if(previousDateresult.TotalItemBought==null){
-  previousDateresult.TotalItemBought=0;
- }
-   const percentageChange: number =
-        CalculationsHelper.calculatePercentageChange(
-          currentDateresult.TotalItemBought,
-          previousDateresult.TotalItemBought,
-        );
-      return { TotalItemBought: currentDateresult.TotalItemBought, percentageChange };
-      }
-async dashboardTotalUnitsBought(id:number,month:string,year:string){
-
-    const {currentStartDate,currentEndDate,previousStartDate,previousEndDate}=this.getComparingDate(month,year);
-
-    let currentDateresult = await this.orderRepository.createQueryBuilder('order')
-    .innerJoin('order.pharmacy', 'pharmacy')
-    .innerJoin('order.ordersDetail', 'orderDetail') 
-    .select(' SUM(orderDetail.quantity)', 'TotalUnitsBought') 
-    .where('pharmacy.id=:id',{id:id})
-    .andWhere('order.createdAt BETWEEN :currentStartDate AND :currentEndDate', { currentStartDate, currentEndDate })
-    .getRawOne();
-    let previousDateresult = await this.orderRepository.createQueryBuilder('order')
-    .innerJoin('order.pharmacy', 'pharmacy')
-    .innerJoin('order.ordersDetail', 'orderDetail') 
-    .select(' SUM(orderDetail.quantity)', 'TotalUnitsBought') 
-    .where('pharmacy.id=:id',{id:id})
-    .andWhere('order.createdAt BETWEEN :previousStartDate AND :previousEndDate', { previousStartDate, previousEndDate })
-    .getRawOne();
-
-    if( currentDateresult.TotalUnitsBought==null){
-    currentDateresult.TotalUnitsBought=0;
+    if (currentDateresult.averageItemDescount == null) {
+      currentDateresult.averageItemDescount = 0;
     }
-    if(previousDateresult.TotalUnitsBought==null){
-    previousDateresult.TotalUnitsBought=0;
+    if (previousDateresult.averageItemDescount == null) {
+      previousDateresult.averageItemDescount = 0;
+    }
+    const percentageChange: number =
+      CalculationsHelper.calculatePercentageChange(
+        currentDateresult.averageItemDescount,
+        previousDateresult.averageItemDescount,
+      );
+    return {
+      averageItemDescount: currentDateresult.averageItemDescount + ' %',
+      percentageChange,
+    };
+  }
+  // const query = await this.orderRepository.createQueryBuilder('order')
+  // .innerJoin('order.pharmacy', 'pharmacy')
+  // .innerJoin('order.ordersDetail', 'ordersDetail')
+  // .innerJoin('ordersDetail.productInventory', 'productInventory')
+  // .innerJoin('productInventory.product', 'product')
+  // .innerJoin('productInventory.store', 'store')
+  // .where('pharmacy.address ILIKE :location OR pharmacy.region ILIKE :location OR pharmacy.governorate ILIKE :location OR pharmacy.country ILIKE :location', { location: `%${location}%` })
+  // .select([
+  //     'product.image AS image',
+  //     'product.name AS name',
+  //     'product.unitsPerPackage AS tablets',
+  //     'product.activeIngredientInEachTablet AS activeIngredientInEachTablet',
+  //     'product.publicPrice AS publicPrice',
+  //     'productInventory.offerPercent AS offerPercent',
+  //     'productInventory.priceAfterOffer AS priceAfterOffer',
+  //     'store.storeName AS storeName'
+  // ])
+  // .addSelect('SUM(ordersDetail.quantity)', 'totalQuantity')
+  // .groupBy('productInventory.id, product.image, product.name, product.unitsPerPackage, product.activeIngredientInEachTablet, product.publicPrice, productInventory.offerPercent, productInventory.priceAfterOffer, store.storeName')
+  // .having('productInventory.amount > 0')
+  // .orderBy('SUM(ordersDetail.quantity)', 'DESC')
+  // .getRawMany();
+
+  async dashboardTotalItemBought(id: number, month: string, year: string) {
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = this.getComparingDate(month, year);
+
+    let currentDateresult = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.pharmacy', 'pharmacy')
+      .innerJoin('order.ordersDetail', 'orderDetail')
+      .select(' COUNT(orderDetail.id)', 'TotalItemBought')
+      .where('pharmacy.id=:id', { id: id })
+      .andWhere(
+        'order.createdAt BETWEEN :currentStartDate AND :currentEndDate',
+        { currentStartDate, currentEndDate },
+      )
+      .getRawOne();
+    let previousDateresult = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.pharmacy', 'pharmacy')
+      .innerJoin('order.ordersDetail', 'orderDetail')
+      .select(' COUNT(orderDetail.id)', 'TotalItemBought')
+      .where('pharmacy.id=:id', { id: id })
+      .andWhere(
+        'order.createdAt BETWEEN :previousStartDate AND :previousEndDate',
+        { previousStartDate, previousEndDate },
+      )
+      .getRawOne();
+
+    if (currentDateresult.TotalItemBought == null) {
+      currentDateresult.TotalItemBought = 0;
+    }
+    if (previousDateresult.TotalItemBought == null) {
+      previousDateresult.TotalItemBought = 0;
+    }
+    const percentageChange: number =
+      CalculationsHelper.calculatePercentageChange(
+        currentDateresult.TotalItemBought,
+        previousDateresult.TotalItemBought,
+      );
+    return {
+      TotalItemBought: currentDateresult.TotalItemBought,
+      percentageChange,
+    };
+  }
+  async dashboardTotalUnitsBought(id: number, month: string, year: string) {
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = this.getComparingDate(month, year);
+
+    let currentDateresult = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.pharmacy', 'pharmacy')
+      .innerJoin('order.ordersDetail', 'orderDetail')
+      .select(' SUM(orderDetail.quantity)', 'TotalUnitsBought')
+      .where('pharmacy.id=:id', { id: id })
+      .andWhere(
+        'order.createdAt BETWEEN :currentStartDate AND :currentEndDate',
+        { currentStartDate, currentEndDate },
+      )
+      .getRawOne();
+    let previousDateresult = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.pharmacy', 'pharmacy')
+      .innerJoin('order.ordersDetail', 'orderDetail')
+      .select(' SUM(orderDetail.quantity)', 'TotalUnitsBought')
+      .where('pharmacy.id=:id', { id: id })
+      .andWhere(
+        'order.createdAt BETWEEN :previousStartDate AND :previousEndDate',
+        { previousStartDate, previousEndDate },
+      )
+      .getRawOne();
+
+    if (currentDateresult.TotalUnitsBought == null) {
+      currentDateresult.TotalUnitsBought = 0;
+    }
+    if (previousDateresult.TotalUnitsBought == null) {
+      previousDateresult.TotalUnitsBought = 0;
     }
     const percentageChange: number =
       CalculationsHelper.calculatePercentageChange(
         currentDateresult.TotalUnitsBought,
         previousDateresult.TotalUnitsBought,
       );
-    return { TotalUnitsBought: currentDateresult.TotalUnitsBought, percentageChange, };
-}      
-private getComparingDate(month:string,year:string){
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const monthNumber = months.indexOf(month) + 1;
+    return {
+      TotalUnitsBought: currentDateresult.TotalUnitsBought,
+      percentageChange,
+    };
+  }
+  private getComparingDate(month: string, year: string) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    const monthNumber = months.indexOf(month) + 1;
 
- const currentStartDate=new Date(year+startOfMonth(monthNumber+'').toISOString().substring(4));
- const currentEndDate= new Date(year+endOfMonth(monthNumber+'').toISOString().substring(4));
+    const currentStartDate = new Date(
+      year +
+        startOfMonth(monthNumber + '')
+          .toISOString()
+          .substring(4),
+    );
+    const currentEndDate = new Date(
+      year +
+        endOfMonth(monthNumber + '')
+          .toISOString()
+          .substring(4),
+    );
 
- const previousStartDate= new Date(year+startOfMonth((monthNumber-1)+'').toISOString().substring(4));
- const previousEndDate= new Date(year+endOfMonth((monthNumber-1)+'').toISOString().substring(4));
+    const previousStartDate = new Date(
+      year +
+        startOfMonth(monthNumber - 1 + '')
+          .toISOString()
+          .substring(4),
+    );
+    const previousEndDate = new Date(
+      year +
+        endOfMonth(monthNumber - 1 + '')
+          .toISOString()
+          .substring(4),
+    );
 
-return {currentStartDate,currentEndDate,previousStartDate,previousEndDate};
-}
+    return {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    };
+  }
 
-async dashboardTotalpharmacistPrice(id:number){
-
-  let  result = await this.orderRepository.createQueryBuilder('order')
-  .innerJoin('order.pharmacy', 'pharmacy')
-  .innerJoin('order.ordersDetail', 'orderDetail')
-  .innerJoin('orderDetail.productInventory', 'productInventory')
-  .select(' SUM(productInventory.priceAfterOffer * orderDetail.quantity)', 'averageItemDescount') 
-  .where('pharmacy.id=:id',{id:id})
-  .getRawOne();
-   return result;
-}
-async dashboardTotalpharmacistPublicPrice(id:number){
-
-  let  result = await this.orderRepository.createQueryBuilder('order')
-  .innerJoin('order.pharmacy', 'pharmacy')
-  .innerJoin('order.ordersDetail', 'orderDetail')
-   .innerJoin('orderDetail.productInventory', 'productInventory')
-  .innerJoin('productInventory.product', 'product')
-  .select(' SUM(product.publicPrice * orderDetail.quantity)', 'averageItemDescount') 
-  .where('pharmacy.id=:id',{id:id})
-  .getRawOne();
-   return result;
-}
-async getMostSolditemsForOnePharmacy(id: number): Promise<any[]> {
-
-  const query = await this.orderRepository.createQueryBuilder('order')
+  async dashboardTotalpharmacistPrice(id: number) {
+    let result = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.pharmacy', 'pharmacy')
+      .innerJoin('order.ordersDetail', 'orderDetail')
+      .innerJoin('orderDetail.productInventory', 'productInventory')
+      .select(
+        ' SUM(productInventory.priceAfterOffer * orderDetail.quantity)',
+        'averageItemDescount',
+      )
+      .where('pharmacy.id=:id', { id: id })
+      .getRawOne();
+    return result;
+  }
+  async dashboardTotalpharmacistPublicPrice(id: number) {
+    let result = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.pharmacy', 'pharmacy')
+      .innerJoin('order.ordersDetail', 'orderDetail')
+      .innerJoin('orderDetail.productInventory', 'productInventory')
+      .innerJoin('productInventory.product', 'product')
+      .select(
+        ' SUM(product.publicPrice * orderDetail.quantity)',
+        'averageItemDescount',
+      )
+      .where('pharmacy.id=:id', { id: id })
+      .getRawOne();
+    return result;
+  }
+  async getMostSolditemsForOnePharmacy(id: number): Promise<any[]> {
+    const query = await this.orderRepository
+      .createQueryBuilder('order')
       .innerJoin('order.pharmacy', 'pharmacy')
       .innerJoin('order.ordersDetail', 'ordersDetail')
       .innerJoin('ordersDetail.productInventory', 'productInventory')
       .innerJoin('productInventory.product', 'product')
       .innerJoin('productInventory.store', 'store')
-      .where('pharmacy.id=:id',{id:id})
+      .where('pharmacy.id=:id', { id: id })
       .select([
-          'product.image AS image',
-          'product.name AS name',
-          'product.unitsPerPackage AS tablets',
-          'product.activeIngredientInEachTablet AS activeIngredientInEachTablet',
-          'product.publicPrice AS publicPrice',
-          'productInventory.offerPercent AS offerPercent',
-          'productInventory.priceAfterOffer AS priceAfterOffer',
-          'store.storeName AS storeName',
-          'ordersDetail.quantity AS totalQuantity'
+        'product.image AS image',
+        'product.name AS name',
+        'product.unitsPerPackage AS tablets',
+        'product.activeIngredientInEachTablet AS activeIngredientInEachTablet',
+        'product.publicPrice AS publicPrice',
+        'productInventory.offerPercent AS offerPercent',
+        'productInventory.priceAfterOffer AS priceAfterOffer',
+        'store.storeName AS storeName',
+        'ordersDetail.quantity AS totalQuantity',
       ])
       .orderBy('ordersDetail.quantity', 'DESC')
       .limit(2)
       .getRawMany();
 
-  const result = query.map(event => ({
+    const result = query.map((event) => ({
       name: event.name,
-      tablets: event.activeingredientineachtablet + 'mg/ ' + event.tablets + 'Tablets',
+      tablets:
+        event.activeingredientineachtablet + 'mg/ ' + event.tablets + 'Tablets',
       storeName: event.storename,
       publicPrice: event.publicprice,
       priceAfterOffer: event.priceafteroffer,
       offerPercent: event.offerpercent,
       image: event.image, // Convert image path to URL
-      totalQuantity: event.totalquantity
-  }));
+      totalQuantity: event.totalquantity,
+    }));
 
-  return result;
-}
+    return result;
+  }
 
-async findOrdersforOnePharmacy_OrdersPage(id: number,state:string) {
-  
-  let orders = await this.orderRepository.createQueryBuilder('order')
-    .leftJoinAndSelect('order.pharmacy', 'pharmacy')
-    .leftJoinAndSelect('order.ordersDetail', 'orderDetail')
-    .leftJoinAndSelect('orderDetail.productInventory', 'productInventory')
-    .leftJoinAndSelect('productInventory.product', 'product')
-    .where('pharmacy.id = :id', { id: id });
-    
-    
-    if(state=='current'){
-      orders= orders.andWhere('order.statusOrder IN (:...statuses)', { statuses: [StatusOrder.ONHOLD, StatusOrder.ONWAY] })
+  async findOrdersforOnePharmacy_OrdersPage(id: number, state: string) {
+    let orders = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.pharmacy', 'pharmacy')
+      .leftJoinAndSelect('order.ordersDetail', 'orderDetail')
+      .leftJoinAndSelect('orderDetail.productInventory', 'productInventory')
+      .leftJoinAndSelect('productInventory.product', 'product')
+      .where('pharmacy.id = :id', { id: id });
+
+    if (state == 'current') {
+      orders = orders.andWhere('order.statusOrder IN (:...statuses)', {
+        statuses: [StatusOrder.ONHOLD, StatusOrder.ONWAY],
+      });
+    } else {
+      orders = orders.andWhere('order.statusOrder IN (:...statuses)', {
+        statuses: [StatusOrder.DELIVERED, StatusOrder.CANCELED],
+      });
     }
-    else { 
-      orders= orders.andWhere('order.statusOrder IN (:...statuses)', { statuses: [StatusOrder.DELIVERED, StatusOrder.CANCELED] })
-        }
-     const  orderss = await orders.orderBy('order.id', 'DESC').getMany();
+    const orderss = await orders.orderBy('order.id', 'DESC').getMany();
     let totalDescount = 0;
     let total = 0;
     let subTotal = 0;
-    let numOrder=0;
-    const result = orderss.map(order => {
+    let numOrder = 0;
+    const result = orderss.map((order) => {
       totalDescount = 0;
       total = 0;
       subTotal = 0;
       numOrder++;
       return {
-      id: order.id,
-      numOrder: numOrder,
-      Date: this.convertTo12HourFormat(order.createdAt).date + ' ' + this.convertTo12HourFormat(order.createdAt).time,
-      State: order.statusOrder,
-      products: order.ordersDetail.map(detail => {
-        
-        const productPrice = typeof detail.productInventory.product.publicPrice === 'string' ? parseFloat(detail.productInventory.product.publicPrice) : detail.productInventory.product.publicPrice;
-        const priceAfterOffer = typeof detail.productInventory.priceAfterOffer === 'string' ? parseFloat(detail.productInventory.priceAfterOffer) : detail.productInventory.priceAfterOffer;
-  
-        subTotal += productPrice* detail.quantity;
-        
-        total += priceAfterOffer* detail.quantity;
+        id: order.id,
+        numOrder: numOrder,
+        Date:
+          this.convertTo12HourFormat(order.createdAt).date +
+          ' ' +
+          this.convertTo12HourFormat(order.createdAt).time,
+        State: order.statusOrder,
+        products: order.ordersDetail.map((detail) => {
+          const productPrice =
+            typeof detail.productInventory.product.publicPrice === 'string'
+              ? parseFloat(detail.productInventory.product.publicPrice)
+              : detail.productInventory.product.publicPrice;
+          const priceAfterOffer =
+            typeof detail.productInventory.priceAfterOffer === 'string'
+              ? parseFloat(detail.productInventory.priceAfterOffer)
+              : detail.productInventory.priceAfterOffer;
 
-        totalDescount += (productPrice - priceAfterOffer) * detail.quantity;
+          subTotal += productPrice * detail.quantity;
 
-        return {
-          name: detail.productInventory.product.name,
-          quantity: detail.quantity,
-          Price: productPrice.toString() // Convert back to string if necessary
-        };
-      })
-      ,subTotal
-      ,totalDescount:totalDescount+'('+ (totalDescount*100/subTotal)+' %)'
-      ,total
-      }
- 
-});
-    
-    return {...result};
-}
-  
-    /**
+          total += priceAfterOffer * detail.quantity;
+
+          totalDescount += (productPrice - priceAfterOffer) * detail.quantity;
+
+          return {
+            name: detail.productInventory.product.name,
+            quantity: detail.quantity,
+            Price: productPrice.toString(), // Convert back to string if necessary
+          };
+        }),
+        subTotal,
+        totalDescount:
+          totalDescount + '(' + (totalDescount * 100) / subTotal + ' %)',
+        total,
+      };
+    });
+
+    return { ...result };
+  }
+
+  /**
    * Retrieve orders associated with a specific store by store ID.
    *
    * @param storeId - The ID of the store.
@@ -898,7 +1014,6 @@ async findOrdersforOnePharmacy_OrdersPage(id: number,state:string) {
       }));
 
     return groupedOrders;
-
   }
 
   /**
@@ -948,6 +1063,69 @@ async findOrdersforOnePharmacy_OrdersPage(id: number,state:string) {
     return {
       currentPeriodOrders,
       previousPeriodOrders,
+      changeRate,
+    };
+  }
+
+  /**
+   *Retrieve sales statistics for a specific store within a given period and calculate
+   *the rate of change in the sales of store compared to the previous equivalent period
+   **/
+  async getStoreSalesStatistics(
+    storeId: number,
+    period: AllowedPeriods,
+  ): Promise<{
+    currentPeriodTotalSales: number;
+    previousPeriodTotalSales: number;
+    changeRate: number;
+  }> {
+    const isExistingStore = await this.storeService.findOne(storeId);
+
+    const {
+      currentStartDate,
+      currentEndDate,
+      previousStartDate,
+      previousEndDate,
+    } = CalculationsHelper.calculateDateRanges(period);
+
+    const currentPeriodTotalSales = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoin('order.ordersDetail', 'orderDetail')
+      .leftJoin('orderDetail.productInventory', 'productInventory')
+      .where('productInventory.storeId = :storeId', { storeId })
+      .select('SUM(orderDetail.price)', 'totalSales')
+      .andWhere('order.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: currentStartDate,
+        endDate: currentEndDate,
+      })
+      .getRawOne();
+
+    const previousPeriodTotalSales = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoin('order.ordersDetail', 'orderDetail')
+      .leftJoin('orderDetail.productInventory', 'productInventory')
+      .where('productInventory.storeId = :storeId', { storeId })
+      .select('SUM(orderDetail.price)', 'totalSales')
+      .andWhere('order.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: previousStartDate,
+        endDate: previousEndDate,
+      })
+      .getRawOne();
+    const currentSales = currentPeriodTotalSales.totalSales
+      ? parseFloat(currentPeriodTotalSales.totalSales)
+      : 0;
+    const previousSales = previousPeriodTotalSales.totalSales
+      ? parseFloat(previousPeriodTotalSales.totalSales)
+      : 0;
+
+    const changeRate = CalculationsHelper.calculatePercentageChange(
+      currentSales,
+      previousSales,
+    );
+
+    return {
+      currentPeriodTotalSales: currentSales,
+      previousPeriodTotalSales: previousSales,
       changeRate,
     };
   }

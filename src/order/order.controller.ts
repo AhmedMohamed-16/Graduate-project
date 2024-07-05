@@ -61,6 +61,18 @@ export class OrderController {
     return this.orderService.getStoreOrderStatistics(storeId, period);
   }
 
+  @Get('store-sales-statistics/:storeId/:period')
+  async getStoreSalesStatistics(
+    @Param('storeId') storeId: number,
+    @Param('period', AllowedPeriodPipe) period: AllowedPeriods,
+  ): Promise<{
+    currentPeriodTotalSales: number;
+    previousPeriodTotalSales: number;
+    changeRate: number;
+  }> {
+    return await this.orderService.getStoreSalesStatistics(storeId, period);
+  }
+
   @Get()
   findAllOrders() {
     return this.orderService.findAll();
