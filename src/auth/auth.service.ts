@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { AdminService } from 'src/admin/admin.service';
 import { PharmacyService } from 'src/pharmacy/pharmacy.service';
@@ -13,13 +13,16 @@ import { CreateUserDto, User } from 'src/common/types/types';
 import { Admin } from 'src/admin/entities/admin.entity';
 import { Pharmacy } from 'src/pharmacy/entities/pharmacy.entity';
 import { Store } from 'src/store/entities/store.entity';
- 
-
+import { randomInt } from 'crypto'; 
+import * as nodemailer from 'nodemailer';
+import * as Twilio from 'twilio';
+import parsePhoneNumberFromString from 'libphonenumber-js';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly adminService: AdminService,
     private readonly pharmacyService: PharmacyService,
+     
     private readonly storeService: StoreService,
 
     private readonly jwtService: JwtService,
@@ -132,4 +135,68 @@ export class AuthService {
 
     return payload;
   }
+//for forget password
+async requestPasswordReset(userName: string,by:string): Promise<void> {
+  const user = await this.pharmacyService.findByUserName( userName );
+  if (!user) {
+    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+  }
+
+  const otp = randomInt(100000, 999999).toString();
+  user.otp = otp;
+  user.otpExpiration = new Date(Date.now() + 3600000); // 1 hour from now
+
+  await this.pharmacyService.save(user);
+
+  if(by=='email'){
+
+   const transporter = nodemailer.createTransport({
+    service: 'gmail', // or another email service
+    auth: {
+      user: 'ahmedmo567765@gmail.com',
+      pass: 'hapkemhacnoawkoj'
+    }
+  });
+
+  try{
+    await   transporter.sendMail({
+      from: 'ahmedmo567765@gmail.com',
+      to:user.pharmacist.email,
+      subject:"from PharmaStore check Password Reset OTP",
+      text:`Your OTP is ${otp}`
+    });
+  }catch(error){
+    console.log(error);
+  }
+}
+else{
+ 
+    const client = Twilio('ACd67b5a03b17060f700ccab9b4a6b4f13', 'a89aea51e7ec152afb4b50ed7028a17c');
+
+   try{ await client.messages.create({
+      from: '+12513197186',
+      to:parsePhoneNumberFromString(user.pharmacist.phoneNumber, 'EG').format('E.164'),
+      body:`from PharmaStore your Password Reset OTP: ${otp}`,
+    });
+   }
+   catch(error){
+    console.log(error);
+  }
+}
+}
+
+
+async verifyOtp(userName: string, otp: string, newPassword: string): Promise<void> {
+  const user = await this.pharmacyService.findByUserName( userName );
+  if (!user || user.otp !== otp || user.otpExpiration < new Date()) {
+    throw new HttpException('Invalid or expired OTP', HttpStatus.NOT_FOUND);
+  }
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  user.password = hashedPassword; // Add proper password hashing here
+  user.otp = null;
+  user.otpExpiration = null;
+  await this.pharmacyService.save(user);
+}
+
 }

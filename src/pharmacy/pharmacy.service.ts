@@ -61,9 +61,12 @@ securityDetails:{userName:pharmacy.userName,password:pharmacy.password},}
   }
 
   async findByUserName(userName: string): Promise<Pharmacy | undefined> {
-    return await this.pharmacyRepo.findOne({ where: { userName } });
+    return await this.pharmacyRepo.findOne({ where: { userName },relations:['pharmacist'] });
   }
+  async save(Pharmacy:Pharmacy): Promise<any> {
 
+    return await this.pharmacyRepo.save(Pharmacy);
+  }
   async update(id: number, updatePharmacyDto: UpdatePharmacyDto) {
     const pharmacy = await this.pharmacyRepo.preload({
       id,

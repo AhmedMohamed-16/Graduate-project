@@ -90,4 +90,11 @@ export class Pharmacy {
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
   }
+  //forget password
+ @Column({ nullable: true })
+ otp: string;
+
+ @Column({ nullable: true })
+ otpExpiration: Date;
+
 }
