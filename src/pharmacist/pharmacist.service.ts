@@ -50,7 +50,6 @@ export class PharmacistService {
   async findByLicenseNumber(licenseNumber: string) {
     return await this.pharmacistRepo.findOne({ where: { licenseNumber } });
   }
-
   update(id: number, updatePharmacistDto: UpdatePharmacistDto) {
     return `This action updates a #${id} pharmacist`;
   }

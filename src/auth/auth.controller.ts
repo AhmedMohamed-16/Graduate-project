@@ -131,4 +131,17 @@ export class AuthController {
     return await this.authService.refreshToken(req.user);
  
   }
+
+  @Post('request-password-reset-ByEmail')
+  async requestPasswordResetByEmail(@Body('userName') userName: string) {
+    await this.authService.requestPasswordReset(userName,'email');
+  }
+  @Post('request-password-reset-ByPhone')
+  async requestPasswordResetByPhone(@Body('userName') userName: string) {
+    await this.authService.requestPasswordReset(userName,'phone');
+  }
+  @Post('verify-otp')
+  async verifyOtp(@Body() body: { userName: string, otp: string, newPassword: string }) {
+    await this.authService.verifyOtp(body.userName, body.otp, body.newPassword);
+  }
 }
